@@ -1,0 +1,137 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ThreatModelReportData",
+  "description": "Input shape consumed by scripts/build_docx_report.py and scripts/build_xlsx_report.py. See examples/sample_report_data.json for a fully worked example.",
+  "type": "object",
+  "required": ["service_name", "date", "threats"],
+  "properties": {
+    "service_name": {"type": "string"},
+    "methodology": {"type": "string"},
+    "date": {"type": "string", "format": "date"},
+    "status": {"type": "string", "enum": ["Draft", "Final", "Under Review"]},
+    "sources_summary": {"type": "array", "items": {"type": "string"}},
+    "executive_summary": {"type": "string"},
+    "scope": {"type": "string"},
+    "sources": {
+      "type": "object",
+      "description": "Keyed by connector: jira, jenkins, servicenow, repo",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {"ref": {"type": "string"}, "description": {"type": "string"}}
+        }
+      }
+    },
+    "actors_components": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "type"],
+        "properties": {
+          "name": {"type": "string"},
+          "type": {"type": "string", "enum": ["External Actor", "Process", "Data Store", "External System"]},
+          "description": {"type": "string"}
+        }
+      }
+    },
+    "trust_boundaries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "boundary": {"type": "string"},
+          "flows_crossing": {"type": "string"},
+          "description": {"type": "string"}
+        }
+      }
+    },
+    "data_flows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["num", "source", "destination"],
+        "properties": {
+          "num": {"type": "integer"},
+          "source": {"type": "string"},
+          "destination": {"type": "string"},
+          "data_action": {"type": "string"},
+          "protocol": {"type": "string"},
+          "threats": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "threats": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "category", "title", "likelihood", "impact", "score", "risk_bucket"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[STRIDE]-[0-9]+$"},
+          "category": {"type": "string", "enum": ["Spoofing", "Tampering", "Repudiation", "Information Disclosure", "Denial of Service", "Elevation of Privilege"]},
+          "title": {"type": "string"},
+          "description": {"type": "string"},
+          "affected_flow": {"type": "string"},
+          "threat_actor": {"type": "string"},
+          "likelihood": {"type": "integer", "minimum": 1, "maximum": 5},
+          "impact": {"type": "integer", "minimum": 1, "maximum": 5},
+          "score": {"type": "integer", "minimum": 1, "maximum": 25},
+          "risk_bucket": {"type": "string", "enum": ["High", "Medium", "Low"]},
+          "impact_rationale": {"type": "string"},
+          "existing_controls": {"type": "string"},
+          "probability_of_mitigation": {"type": "string"},
+          "residual_risk": {"type": "string"},
+          "additional_controls_required": {"type": "array", "items": {"type": "string"}},
+          "mitigation": {"type": "string"},
+          "owner_action": {"type": "string"}
+        }
+      }
+    },
+    "attack_chains": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["chain_id", "name", "steps"],
+        "properties": {
+          "chain_id": {"type": "string"},
+          "name": {"type": "string"},
+          "narrative": {"type": "string"},
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "step_num": {"type": "integer"},
+                "threat_id": {"type": "string"},
+                "description": {"type": "string"}
+              }
+            }
+          },
+          "overall_risk": {"type": "string"}
+        }
+      }
+    },
+    "compliance_gaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "control_name": {"type": "string"},
+          "compliance_status": {"type": "string", "const": "Partially Compliant"},
+          "gap_description": {"type": "string"},
+          "recommended_additional_controls": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "recommendations": {"type": "array", "items": {"type": "string"}},
+    "references": {"type": "array", "items": {"type": "string"}},
+    "diagrams": {
+      "type": "object",
+      "properties": {
+        "dfd_image_path": {"type": "string", "description": "Optional: path to a rendered PNG/SVG preview of the DFD, embedded directly in the docx"},
+        "dfd_drawio_filename": {"type": "string"},
+        "threat_model_drawio_filename": {"type": "string"}
+      }
+    }
+  }
+}

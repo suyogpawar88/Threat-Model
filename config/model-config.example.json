@@ -1,0 +1,11 @@
+{
+  "_comment": "Copy to model-config.json (or just export MODEL_NAME) and edit. Controls which Claude model scripts/summarize.py calls when compressing large connector payloads (Jenkins console logs, big Jira threads, large repo files) before they enter the main threat-modeling session's context.",
+  "MODEL_NAME": "claude-sonnet-5",
+  "_available_models": {
+    "claude-sonnet-5": "Default. Best cost/quality balance for extractive summarization -- this is the token-minimization lever referenced in the plugin description.",
+    "claude-haiku-4-5-20251001": "Cheapest/fastest option. Use for very high-volume connector pulls (e.g. summarizing many Jenkins builds in a loop) where summary fidelity can be slightly lower.",
+    "claude-opus-4-8": "Highest fidelity. Use for unusually dense or ambiguous source material (e.g. sparse legacy documentation) where under-summarizing would lose security-relevant detail.",
+    "claude-fable-5": "Alternative general-purpose model; swap in if your org standardizes on it instead of Sonnet."
+  },
+  "_note": "This file only controls the summarization helper script. The main threat-modeling reasoning itself runs on whatever model is driving your Claude Code / Cowork session -- switch that from your client's model picker."
+}

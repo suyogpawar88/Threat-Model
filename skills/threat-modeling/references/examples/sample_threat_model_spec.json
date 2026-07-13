@@ -1,0 +1,30 @@
+{
+  "title": "Payment Onboarding Service - Threat Model",
+  "trust_boundaries": [
+    {"id": "tb_external", "label": "External / Untrusted Actors", "x": 20, "y": 80, "width": 220, "height": 520, "color": "#6c6c6c"},
+    {"id": "tb_internal", "label": "Internal Infrastructure Trust Boundary", "x": 270, "y": 80, "width": 780, "height": 520, "color": "#185FA5"}
+  ],
+  "nodes": [
+    {"id": "customer", "label": "Customer", "type": "external_entity", "x": 45, "y": 130, "width": 160, "height": 60, "description": "Submits KYC application"},
+    {"id": "api_gw", "label": "API Gateway", "type": "process", "x": 300, "y": 120, "width": 160, "height": 55, "description": "AuthN + rate limiting"},
+    {"id": "onboarding_svc", "label": "Onboarding Service", "type": "process", "x": 300, "y": 230, "width": 160, "height": 55, "description": "Validates + persists KYC data"},
+    {"id": "kyc_db", "label": "KYC Data Store", "type": "data_store", "x": 300, "y": 340, "width": 160, "height": 50, "description": "PII, documents"},
+    {"id": "sanctions_api", "label": "Sanctions Screening (3rd party)", "type": "external_system", "x": 560, "y": 230, "width": 180, "height": 55, "description": "Outbound PII transfer"},
+    {"id": "jenkins", "label": "Jenkins CI/CD", "type": "process", "x": 560, "y": 400, "width": 180, "height": 55, "description": "Deploys onboarding-service"}
+  ],
+  "flows": [
+    {"id": "f1", "label": "(1) Submit application", "source": "customer", "target": "api_gw", "threats": ["S-1", "E-1"], "tag_x": 210, "tag_y": 130},
+    {"id": "f2", "label": "(2) Forward validated request", "source": "api_gw", "target": "onboarding_svc", "threats": ["T-1"], "tag_x": 470, "tag_y": 175},
+    {"id": "f3", "label": "(3) Persist KYC record", "source": "onboarding_svc", "target": "kyc_db", "threats": ["I-1"], "tag_x": 470, "tag_y": 300},
+    {"id": "f4", "label": "(4) Screen applicant", "source": "onboarding_svc", "target": "sanctions_api", "threats": ["I-2", "R-1"], "tag_x": 545, "tag_y": 260},
+    {"id": "f5", "label": "(5) Deploy build", "source": "jenkins", "target": "onboarding_svc", "dashed": true, "threats": ["T-2"], "tag_x": 545, "tag_y": 400}
+  ],
+  "threat_actors": [
+    {"id": "actor_ext", "label": "Unauthenticated\nExternal Attacker", "target": "api_gw", "x": 45, "y": 420, "width": 170, "height": 70},
+    {"id": "actor_insider", "label": "Malicious/Compromised\nCI Credential", "target": "jenkins", "x": 780, "y": 500, "width": 180, "height": 70}
+  ],
+  "boundary_crossings": [
+    {"x": 258, "y": 148},
+    {"x": 258, "y": 258}
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "name": "appsec-threat-modeler",
+  "version": "0.1.0",
+  "description": "Pulls context from Jira, Jenkins, ServiceNow, and a code repository, then runs an end-to-end threat model: data flow diagram, trust boundaries, threat actors, STRIDE threat register, attack-chain mapping, compensating-controls assessment, and gap-based recommendations. Outputs a Word report, an Excel risk register, and draw.io-compatible diagrams. Defaults to Claude Sonnet for cost-efficient analysis; reasoning model is user-configurable.",
+  "author": {
+    "name": "Suyog Pawar"
+  },
+  "homepage": "https://github.com/suyogpawar4688/appsec-threat-modeler",
+  "repository": "https://github.com/suyogpawar4688/appsec-threat-modeler",
+  "license": "MIT",
+  "keywords": ["threat-modeling", "appsec", "devsecops", "stride", "risk-assessment", "security", "drawio"],
+  "mcpServers": "./.mcp.json"
+}

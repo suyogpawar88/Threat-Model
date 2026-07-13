@@ -5,8 +5,8 @@
   "author": {
     "name": "Suyog Pawar"
   },
-  "homepage": "https://github.com/suyogpawar4688/appsec-threat-modeler",
-  "repository": "https://github.com/suyogpawar4688/appsec-threat-modeler",
+  "homepage": "https://github.com/suyogpawar88/Threat-Model",
+  "repository": "https://github.com/suyogpawar88/Threat-Model",
   "license": "MIT",
   "keywords": ["threat-modeling", "appsec", "devsecops", "stride", "risk-assessment", "security", "drawio"],
   "mcpServers": "./.mcp.json"

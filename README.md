@@ -1,4 +1,4 @@
-# Threat Model PLugin
+# Threat Model Plugin
 
 A Claude plugin that pulls live context from **Jira, Jenkins, ServiceNow, and a code repository**
 via API-key-authenticated connectors, then runs an end-to-end security threat model: a data flow

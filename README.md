@@ -108,7 +108,7 @@ Pages:
 2. Go to **Settings → Pages**.
 3. Under **Build and deployment**, set **Source** to "Deploy from a branch," branch `main`, folder
    `/docs`.
-4. Save — GitHub publishes the page at `https://<your-username>.github.io/appsec-threat-modeler/`
+4. Save — GitHub publishes the page at `https://<your-username>.github.io/Threat-Model/`
    within a few minutes.
 
 ## Security notes

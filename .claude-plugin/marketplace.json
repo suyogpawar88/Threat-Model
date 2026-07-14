@@ -1,12 +1,14 @@
 {
-  "name": "Threat Model Plugins",
+  "name": "threat-model-plugins",
+  "owner": {
+    "name": "Suyog Pawar"
+  },
   "description": "A collection of threat modeling plugins",
   "plugins": [
     {
-      "id": "threat-model",
-      "name": "Threat Model",
-      "description": "...",
-      "manifest": "path/to/plugin.json"
+      "name": "threat-model",
+      "description": "Pulls context from Jira, Jenkins, ServiceNow, and a code repository, then runs an end-to-end security threat model: DFD, STRIDE register, attack-chain mapping, compensating-controls assessment, and gap-based recommendations.",
+      "source": "."
     }
   ]
 }

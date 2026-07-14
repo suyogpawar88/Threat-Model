@@ -1,0 +1,12 @@
+{
+  "name": "Threat Model Plugins",
+  "description": "A collection of threat modeling plugins",
+  "plugins": [
+    {
+      "id": "threat-model",
+      "name": "Threat Model",
+      "description": "...",
+      "manifest": "path/to/plugin.json"
+    }
+  ]
+}

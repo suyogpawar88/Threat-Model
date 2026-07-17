@@ -1,0 +1,38 @@
+{
+  "title": "AI Support Agent (RAG + Tool-Calling) - Threat Model",
+  "trust_boundaries": [
+    {"id": "tb_external", "label": "External / Untrusted Actors", "x": 20, "y": 60, "width": 200, "height": 620, "color": "#6c6c6c"},
+    {"id": "tb_internal", "label": "Internal AI Infrastructure Trust Boundary", "x": 250, "y": 60, "width": 620, "height": 620, "color": "#185FA5"},
+    {"id": "tb_business", "label": "Business Systems Trust Boundary", "x": 900, "y": 300, "width": 220, "height": 200, "color": "#B85450"}
+  ],
+  "nodes": [
+    {"id": "customer", "label": "Customer", "type": "external_entity", "x": 45, "y": 100, "width": 150, "height": 55, "description": "Submits support chat message"},
+    {"id": "chat_api", "label": "Chat API Gateway", "type": "process", "x": 280, "y": 100, "width": 160, "height": 55, "description": "AuthN + rate limiting"},
+    {"id": "agent_orch", "label": "Support Agent Orchestrator", "type": "agent", "x": 280, "y": 210, "width": 170, "height": 60, "description": "LangGraph agent: plans, calls tools, calls LLM"},
+    {"id": "llm_endpoint", "label": "LLM Inference Endpoint", "type": "inference_endpoint", "x": 520, "y": 210, "width": 170, "height": 60, "description": "Hosted model serving completions"},
+    {"id": "vector_store", "label": "Support KB Vector Store", "type": "vector_store", "x": 280, "y": 330, "width": 170, "height": 55, "description": "Embeddings of support docs (RAG)"},
+    {"id": "doc_ingestion", "label": "Doc Ingestion Pipeline", "type": "process", "x": 60, "y": 330, "width": 170, "height": 55, "description": "Pulls docs from Confluence into vector store"},
+    {"id": "fine_tune", "label": "Fine-Tuning Pipeline", "type": "training_pipeline", "x": 280, "y": 440, "width": 170, "height": 55, "description": "Periodic fine-tune on support transcripts"},
+    {"id": "model_registry", "label": "Model Registry", "type": "model_registry", "x": 520, "y": 440, "width": 170, "height": 55, "description": "MLflow-backed fine-tuned model versions"},
+    {"id": "crm_tool", "label": "CRM / Refund Tool", "type": "external_system", "x": 920, "y": 340, "width": 180, "height": 55, "description": "Agent-callable tool with refund authority"}
+  ],
+  "flows": [
+    {"id": "f1", "label": "(1) Submit support message", "source": "customer", "target": "chat_api", "threats": ["S-1", "T-1"], "tag_x": 235, "tag_y": 110},
+    {"id": "f2", "label": "(2) Forward conversation", "source": "chat_api", "target": "agent_orch", "threats": ["E-3"], "tag_x": 460, "tag_y": 165},
+    {"id": "f3", "label": "(3) Prompt + retrieved context", "source": "agent_orch", "target": "llm_endpoint", "threats": ["I-1", "D-1"], "tag_x": 470, "tag_y": 220},
+    {"id": "f4", "label": "(4) Retrieve KB context (RAG)", "source": "vector_store", "target": "agent_orch", "threats": ["T-2", "I-2"], "tag_x": 275, "tag_y": 290},
+    {"id": "f5", "label": "(5) Ingest support docs", "source": "doc_ingestion", "target": "vector_store", "threats": ["T-2"], "tag_x": 245, "tag_y": 355},
+    {"id": "f6", "label": "(6) Call refund/account tool", "source": "agent_orch", "target": "crm_tool", "threats": ["E-1", "E-2"], "tag_x": 700, "tag_y": 300},
+    {"id": "f7", "label": "(7) Publish fine-tuned model", "source": "fine_tune", "target": "model_registry", "threats": ["T-3"], "tag_x": 470, "tag_y": 460},
+    {"id": "f8", "label": "(8) Deploy model version", "source": "model_registry", "target": "llm_endpoint", "dashed": true, "threats": ["T-4", "R-2"], "tag_x": 600, "tag_y": 350}
+  ],
+  "threat_actors": [
+    {"id": "actor_ext", "label": "Unauthenticated\nExternal Attacker", "target": "chat_api", "x": 45, "y": 460, "width": 170, "height": 70},
+    {"id": "actor_doc", "label": "Malicious/Compromised\nDocument Author", "target": "doc_ingestion", "x": 45, "y": 550, "width": 170, "height": 70},
+    {"id": "actor_pipeline", "label": "Compromised\nFine-Tuning Credential", "target": "fine_tune", "x": 280, "y": 550, "width": 170, "height": 70}
+  ],
+  "boundary_crossings": [
+    {"x": 268, "y": 128},
+    {"x": 895, "y": 358}
+  ]
+}

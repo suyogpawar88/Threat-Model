@@ -1,0 +1,41 @@
+{
+  "mcpServers": {
+    "jira": {
+      "command": "python3",
+      "args": ["scripts/connectors/jira_connector.py"],
+      "env": {
+        "JIRA_BASE_URL": "${JIRA_BASE_URL}",
+        "JIRA_EMAIL": "${JIRA_EMAIL}",
+        "JIRA_API_TOKEN": "${JIRA_API_TOKEN}"
+      }
+    },
+    "jenkins": {
+      "command": "python3",
+      "args": ["scripts/connectors/jenkins_connector.py"],
+      "env": {
+        "JENKINS_BASE_URL": "${JENKINS_BASE_URL}",
+        "JENKINS_USER": "${JENKINS_USER}",
+        "JENKINS_API_TOKEN": "${JENKINS_API_TOKEN}"
+      }
+    },
+    "servicenow": {
+      "command": "python3",
+      "args": ["scripts/connectors/servicenow_connector.py"],
+      "env": {
+        "SERVICENOW_INSTANCE_URL": "${SERVICENOW_INSTANCE_URL}",
+        "SERVICENOW_USER": "${SERVICENOW_USER}",
+        "SERVICENOW_PASSWORD": "${SERVICENOW_PASSWORD}"
+      }
+    },
+    "repo": {
+      "command": "python3",
+      "args": ["scripts/connectors/repo_connector.py"],
+      "env": {
+        "REPO_PROVIDER": "${REPO_PROVIDER}",
+        "REPO_TOKEN": "${REPO_TOKEN}",
+        "REPO_OWNER": "${REPO_OWNER}",
+        "REPO_NAME": "${REPO_NAME}"
+      }
+    }
+  }
+}

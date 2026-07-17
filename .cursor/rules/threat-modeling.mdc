@@ -1,0 +1,53 @@
+---
+description: End-to-end security threat modeling (STRIDE/PASTA, OWASP AppSec/API/LLM Top 10, MITRE ATT&CK/ATLAS) for AI and conventional application infrastructure, using this repo's Jira/Jenkins/ServiceNow/repo connectors.
+globs:
+alwaysApply: false
+---
+
+# Threat Modeling Rule
+
+This project ships a full threat-modeling workflow originally packaged as a Claude Code / Cowork
+plugin. It works the same way here: read `skills/threat-modeling/SKILL.md` in full before starting,
+and follow it step by step. Do not skip straight to writing a threat list.
+
+## What this covers
+
+- STRIDE threat enumeration with Likelihood x Impact business-risk scoring
+  (`skills/threat-modeling/references/stride-methodology.md`)
+- Optional full 7-stage PASTA process for higher-rigor engagements
+  (`skills/threat-modeling/references/pasta-methodology.md`)
+- AI/ML/LLM infrastructure threats -- prompt injection, training/RAG data poisoning, model
+  extraction, excessive agency, insecure output handling, unbounded consumption, etc.
+  (`skills/threat-modeling/references/ai-threat-taxonomy.md`)
+- OWASP Top 10 (2021), OWASP API Security Top 10 (2023), and OWASP Top 10 for LLM Applications
+  (2025) mapping for every threat (`skills/threat-modeling/references/owasp-mappings.md`)
+- MITRE ATT&CK (Enterprise) and MITRE ATLAS technique tagging for attack-chain steps
+  (`skills/threat-modeling/references/mitre-mappings.md`)
+- Compensating-controls, mitigation-assurance, and compliance-gap analysis
+  (`skills/threat-modeling/references/compensating-controls-and-gaps.md`)
+- Attack-chain / attack-scenario mapping (`skills/threat-modeling/references/attack-chain-mapping.md`)
+
+## How to run it here
+
+1. The four connectors (Jira, Jenkins, ServiceNow, code repo) are registered as MCP servers in
+   `.cursor/mcp.json` -- enable them in Cursor's MCP settings and set the referenced environment
+   variables (see `.env.example` / `README.md`). None are mandatory; the skill works with whatever
+   subset is configured.
+2. Trigger this rule whenever the user asks to threat model a service, run STRIDE/PASTA, map
+   threats to OWASP or MITRE, or produce a DFD/Word report/Excel risk register for a system --
+   including AI/LLM/agent systems.
+3. Follow `skills/threat-modeling/SKILL.md` Steps 1-9 exactly, using the report-data schema at
+   `skills/threat-modeling/references/report-data-schema.json` and the worked examples in
+   `skills/threat-modeling/references/examples/` (`sample_*` for a conventional app,
+   `sample_ai_*` for an AI/RAG/agent system).
+4. Render outputs by running the bundled scripts directly:
+   `python3 scripts/generate_drawio.py <spec.json> <output>.drawio [dfd|threat_model]`,
+   `python3 scripts/build_docx_report.py <report_data.json> <output>.docx`,
+   `python3 scripts/build_xlsx_report.py <report_data.json> <output>.xlsx`.
+5. For large connector payloads, pipe through `python3 scripts/summarize.py --focus "..."` first
+   (requires `ANTHROPIC_API_KEY`) rather than reading raw payloads in full -- see
+   `scripts/requirements.txt` for Python dependencies (`pip install -r scripts/requirements.txt`).
+
+Keep the same quality bar as the skill's "Quality Standards" and "Error Handling" sections: every
+STRIDE category needs 2+ threats, every threat needs an `owasp_id`, at least one attack chain needs
+MITRE-tagged steps, and missing connector config should be reported plainly rather than fabricated.

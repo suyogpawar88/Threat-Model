@@ -1,13 +1,13 @@
 {
   "name": "appsec-threat-modeler",
-  "version": "0.1.0",
-  "description": "Pulls context from Jira, Jenkins, ServiceNow, and a code repository, then runs an end-to-end threat model: data flow diagram, trust boundaries, threat actors, STRIDE threat register, attack-chain mapping, compensating-controls assessment, and gap-based recommendations. Outputs a Word report, an Excel risk register, and draw.io-compatible diagrams. Defaults to Claude Sonnet for cost-efficient analysis; reasoning model is user-configurable.",
+  "version": "0.2.0",
+  "description": "Pulls context from Jira, Jenkins, ServiceNow, and a code repository, then runs an end-to-end threat model covering both conventional application/API systems and AI/ML/LLM infrastructure: data flow diagram, trust boundaries, threat actors, STRIDE threat register (optionally full 7-stage PASTA), AI/ML-specific threats (prompt injection, training/RAG data poisoning, model extraction, excessive agency), attack-chain mapping, compensating-controls assessment, and gap-based recommendations -- with every threat mapped to OWASP Top 10 / OWASP API Security Top 10 / OWASP Top 10 for LLM Applications and MITRE ATT&CK / MITRE ATLAS. Outputs a Word report, an Excel risk register, and draw.io-compatible diagrams. Defaults to Claude Sonnet for cost-efficient analysis; reasoning model is user-configurable. Also runs under OpenAI Codex CLI (AGENTS.md) and Cursor (.cursor/rules + .cursor/mcp.json).",
   "author": {
     "name": "Suyog Pawar"
   },
   "homepage": "https://github.com/suyogpawar88/Threat-Model",
   "repository": "https://github.com/suyogpawar88/Threat-Model",
   "license": "MIT",
-  "keywords": ["threat-modeling", "appsec", "devsecops", "stride", "risk-assessment", "security", "drawio"],
+  "keywords": ["threat-modeling", "appsec", "devsecops", "stride", "pasta", "risk-assessment", "security", "drawio", "ai-security", "llm-security", "owasp", "mitre-attack", "mitre-atlas", "rag", "agentic-ai"],
   "mcpServers": "./.mcp.json"
 }

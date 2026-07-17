@@ -5,9 +5,11 @@ Word (.docx) threat model report builder for appsec-threat-modeler.
 Takes a structured JSON payload (produced during the threat-modeling skill
 workflow -- see skills/threat-modeling/references/report-data-schema.json
 for the full shape) and renders a polished Word report: doc info, DFD/threat
-model diagram references, STRIDE threat register, risk prioritization,
-compensating controls, attack-chain mapping, compliance gap analysis with
-recommended additional controls, and overall recommendations.
+model diagram references, STRIDE threat register (with OWASP Top 10 / API
+Security Top 10 / LLM Top 10 mapping), risk prioritization, compensating
+controls, attack-chain mapping (with MITRE ATT&CK / ATLAS technique tagging),
+compliance gap analysis with recommended additional controls, a framework
+coverage appendix, and overall recommendations.
 
 Usage:
   python3 build_docx_report.py report_data.json Output_Report.docx
@@ -91,7 +93,7 @@ def build_report(data: dict, output_path: str):
         ["Field", "Detail"],
         [
             ["Service", data.get("service_name", "")],
-            ["Methodology", data.get("methodology", "STRIDE + attack-chain mapping + compensating-controls assessment")],
+            ["Methodology", data.get("methodology", "STRIDE + attack-chain mapping + compensating-controls assessment + OWASP/MITRE mapping")],
             ["Date", data.get("date", "")],
             ["Status", data.get("status", "Draft")],
             ["Sources", ", ".join(data.get("sources_summary", []))],
@@ -179,7 +181,7 @@ def build_report(data: dict, output_path: str):
         add_heading(doc, f"7.{idx} {cat}", 2)
         add_table(
             doc,
-            ["ID", "Threat", "Affected Flow", "Threat Actor", "L×I=Score", "Risk", "Mitigation"],
+            ["ID", "Threat", "Affected Flow", "Threat Actor", "L×I=Score", "Risk", "OWASP", "Mitigation"],
             [
                 [
                     t.get("id"),
@@ -188,11 +190,12 @@ def build_report(data: dict, output_path: str):
                     t.get("threat_actor"),
                     f"{t.get('likelihood', '')}×{t.get('impact', '')}={t.get('score', '')}",
                     t.get("risk_bucket"),
+                    ", ".join(t.get("owasp_id", [])) if isinstance(t.get("owasp_id"), list) else t.get("owasp_id", ""),
                     t.get("mitigation"),
                 ]
                 for t in cat_threats
             ],
-            widths_cm=[1.5, 5, 2, 2.5, 2, 1.5, 4],
+            widths_cm=[1.5, 4.5, 2, 2.5, 1.8, 1.3, 2, 3.4],
             risk_col_idx=5,
         )
 
@@ -238,11 +241,15 @@ def build_report(data: dict, output_path: str):
     for chain in data.get("attack_chains", []):
         add_heading(doc, f"Attack Chain: {chain.get('name')} ({chain.get('chain_id')})", 2)
         doc.add_paragraph(chain.get("narrative", ""))
+        def _mitre_cell(s):
+            ids = list(s.get("mitre_attack_technique", []) or []) + list(s.get("mitre_atlas_technique", []) or [])
+            return ", ".join(ids)
+
         add_table(
             doc,
-            ["Step", "Threat ID", "Description"],
-            [[s.get("step_num"), s.get("threat_id"), s.get("description")] for s in chain.get("steps", [])],
-            widths_cm=[1.5, 2, 12],
+            ["Step", "Threat ID", "Description", "MITRE ATT&CK / ATLAS"],
+            [[s.get("step_num"), s.get("threat_id"), s.get("description"), _mitre_cell(s)] for s in chain.get("steps", [])],
+            widths_cm=[1.5, 2, 9.5, 3],
         )
         doc.add_paragraph(f"Overall chain risk: {chain.get('overall_risk', '')}")
 
@@ -267,13 +274,42 @@ def build_report(data: dict, output_path: str):
         widths_cm=[3, 2.5, 6, 6],
     )
 
-    # --- 12. Key Recommendations ---
-    add_heading(doc, "12. Key Recommendations", 1)
+    # --- 12. Framework Coverage Mapping ---
+    add_heading(doc, "12. Framework Coverage Mapping", 1)
+    doc.add_paragraph(
+        "Every threat mapped to the applicable OWASP list(s) -- OWASP Top 10 (web AppSec), OWASP "
+        "API Security Top 10, and/or OWASP Top 10 for LLM Applications -- and, for AI/ML-targeting "
+        "threats, the AI/ML pipeline component involved. See references/owasp-mappings.md and "
+        "references/ai-threat-taxonomy.md for the full mapping tables."
+    )
+    add_table(
+        doc,
+        ["ID", "Category", "AI Component", "OWASP Mapping"],
+        [
+            [
+                t.get("id"),
+                t.get("category"),
+                t.get("ai_component", "none"),
+                ", ".join(t.get("owasp_id", [])) if isinstance(t.get("owasp_id"), list) else t.get("owasp_id", ""),
+            ]
+            for t in threats
+        ],
+        widths_cm=[1.5, 4, 4, 6.5],
+    )
+    fc = data.get("framework_coverage", {})
+    if fc:
+        doc.add_paragraph(
+            "Frameworks applied to this assessment: "
+            + ", ".join(k.replace("_", " ").upper() for k, v in fc.items() if v)
+        )
+
+    # --- 13. Key Recommendations ---
+    add_heading(doc, "13. Key Recommendations", 1)
     for i, rec in enumerate(data.get("recommendations", []), start=1):
         doc.add_paragraph(f"{i}. {rec}", style="List Number")
 
-    # --- 13. References ---
-    add_heading(doc, "13. References", 1)
+    # --- 14. References ---
+    add_heading(doc, "14. References", 1)
     for ref in data.get("references", []):
         doc.add_paragraph(ref, style="List Bullet")
 

@@ -4,9 +4,10 @@ Excel (.xlsx) risk register builder for appsec-threat-modeler.
 
 Takes the same structured JSON payload as build_docx_report.py and renders
 a multi-sheet workbook: Summary, Threat Register, Risk Prioritization,
-Compensating Controls, Attack Chains, Compliance Gaps, Data Flows,
-Recommendations, Sources. Designed for risk owners who want to filter/sort/
-pivot rather than read a narrative document.
+Compensating Controls, Attack Chains, Compliance Gaps, Framework Mapping
+(OWASP Top 10 / API Security Top 10 / LLM Top 10 + MITRE ATT&CK / ATLAS),
+Data Flows, Recommendations, Sources. Designed for risk owners who want to
+filter/sort/pivot rather than read a narrative document.
 
 Usage:
   python3 build_xlsx_report.py report_data.json Output_Risk_Register.xlsx
@@ -85,15 +86,20 @@ def build_workbook(data: dict, output_path: str):
 
     # --- Threat Register ---
     ws = wb.create_sheet("Threat Register")
+
+    def _owasp(t):
+        v = t.get("owasp_id", [])
+        return ", ".join(v) if isinstance(v, list) else (v or "")
+
     _write_sheet(
         ws,
-        ["ID", "Category", "Title", "Description", "Affected Flow", "Threat Actor", "Likelihood", "Impact", "Score", "Risk", "Existing Controls", "Mitigation"],
+        ["ID", "Category", "Title", "Description", "Affected Flow", "Threat Actor", "AI Component", "OWASP ID", "Likelihood", "Impact", "Score", "Risk", "Existing Controls", "Mitigation"],
         [
-            [t.get("id"), t.get("category"), t.get("title"), t.get("description"), t.get("affected_flow"), t.get("threat_actor"), t.get("likelihood"), t.get("impact"), t.get("score"), t.get("risk_bucket"), t.get("existing_controls"), t.get("mitigation")]
+            [t.get("id"), t.get("category"), t.get("title"), t.get("description"), t.get("affected_flow"), t.get("threat_actor"), t.get("ai_component", "none"), _owasp(t), t.get("likelihood"), t.get("impact"), t.get("score"), t.get("risk_bucket"), t.get("existing_controls"), t.get("mitigation")]
             for t in threats
         ],
-        widths=[6, 14, 20, 40, 12, 16, 9, 8, 7, 8, 30, 35],
-        risk_col=9,
+        widths=[6, 14, 20, 38, 12, 16, 14, 12, 9, 8, 7, 8, 28, 32],
+        risk_col=11,
     )
 
     # --- Risk Prioritization ---
@@ -154,6 +160,32 @@ def build_workbook(data: dict, output_path: str):
             for g in data.get("compliance_gaps", [])
         ],
         widths=[22, 18, 40, 40],
+    )
+
+    # --- Framework Mapping (OWASP + MITRE) ---
+    ws = wb.create_sheet("Framework Mapping")
+    fw_rows = []
+    for t in threats:
+        owasp = t.get("owasp_id", [])
+        owasp = ", ".join(owasp) if isinstance(owasp, list) else (owasp or "")
+        fw_rows.append([t.get("id"), t.get("category"), t.get("ai_component", "none"), owasp, "", ""])
+    for chain in data.get("attack_chains", []):
+        for step in chain.get("steps", []):
+            attack = step.get("mitre_attack_technique", []) or []
+            atlas = step.get("mitre_atlas_technique", []) or []
+            fw_rows.append([
+                f"{chain.get('chain_id')}.{step.get('step_num')}",
+                f"Attack chain step (threat {step.get('threat_id')})",
+                "",
+                "",
+                ", ".join(attack),
+                ", ".join(atlas),
+            ])
+    _write_sheet(
+        ws,
+        ["ID", "Category / Step", "AI Component", "OWASP ID", "MITRE ATT&CK", "MITRE ATLAS"],
+        fw_rows,
+        widths=[10, 30, 16, 16, 16, 16],
     )
 
     # --- Data Flows ---

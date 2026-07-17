@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.env
+*.docx
+*.xlsx
+*.drawio
+!skills/threat-modeling/references/examples/*.drawio

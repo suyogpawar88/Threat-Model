@@ -7,6 +7,13 @@ Builds two kinds of diagrams from a single JSON spec format:
   - Threat Model Diagram: the same layout plus trust-boundary swimlanes and
     threat-actor nodes with dashed red arrows into each boundary crossing
 
+Node "type" also accepts AI/ML pipeline component types (see
+skills/threat-modeling/references/ai-threat-taxonomy.md): "training_pipeline",
+"model_registry", "vector_store", "inference_endpoint", and "agent" (for an
+agent/tool-orchestration layer) -- each rendered with its own distinct style
+so AI-scoped diagrams are visually distinguishable from conventional
+processes/data stores at a glance.
+
 Both are valid mxGraphModel XML, importable directly at https://app.diagrams.net
 or the draw.io desktop app -- fully editable after import, not a flattened image.
 
@@ -47,6 +54,12 @@ NODE_STYLES = {
     "process": "rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#5DCAA5;fontSize=12;arcSize=30;",
     "data_store": "shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;",
     "external_system": "rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#EF9F27;fontSize=12;arcSize=12;",
+    # AI/ML pipeline component types -- see skills/threat-modeling/references/ai-threat-taxonomy.md
+    "training_pipeline": "rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673A6;fontSize=12;arcSize=20;dashed=0;",
+    "model_registry": "shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;fillColor=#d0cee2;strokeColor=#56517E;fontSize=12;",
+    "vector_store": "shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;fillColor=#b0e3e6;strokeColor=#0e8088;fontSize=12;",
+    "inference_endpoint": "rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;arcSize=30;",
+    "agent": "rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;arcSize=30;dashed=1;dashPattern=4 2;",
 }
 
 THREAT_ACTOR_STYLE = (

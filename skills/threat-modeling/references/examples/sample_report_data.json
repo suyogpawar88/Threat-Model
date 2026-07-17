@@ -1,47 +1,381 @@
 {
   "service_name": "Payment Onboarding Service",
-  "methodology": "STRIDE + PASTA-style scoring + attack-chain mapping + compensating-controls assessment",
+  "methodology": "STRIDE + PASTA-style business-impact scoring + attack-chain mapping (MITRE ATT&CK-tagged) + compensating-controls assessment + OWASP Top 10 / API Security Top 10 mapping",
   "date": "2026-07-13",
   "status": "Draft",
-  "sources_summary": ["Jira PROJ-4210 (epic)", "Jenkins onboarding-service pipeline", "ServiceNow CHG0043211", "GitHub org/onboarding-service"],
+  "sources_summary": [
+    "Jira PROJ-4210 (epic)",
+    "Jenkins onboarding-service pipeline",
+    "ServiceNow CHG0043211",
+    "GitHub org/onboarding-service"
+  ],
   "executive_summary": "The Payment Onboarding Service ingests customer KYC applications, screens them against a third-party sanctions API, and persists records to a dedicated data store. Nine threats were identified across all six STRIDE categories; two are rated High risk and form the basis of a single plausible attack chain that could result in unauthorized approval of a sanctioned applicant. One compliance control (outbound PII transfer logging) was found partially compliant.",
   "scope": "In scope: API Gateway, Onboarding Service, KYC Data Store, Sanctions Screening integration, and the Jenkins deployment pipeline for onboarding-service. Out of scope: downstream ledger posting.",
   "sources": {
-    "jira": [{"ref": "PROJ-4210", "description": "Epic: KYC onboarding v2"}],
-    "jenkins": [{"ref": "onboarding-service #482", "description": "Last successful deploy to prod"}],
-    "servicenow": [{"ref": "CHG0043211", "description": "Change request for sanctions API integration"}],
-    "repo": [{"ref": "org/onboarding-service@main", "description": "Source repo, auth middleware reviewed"}]
+    "jira": [
+      {
+        "ref": "PROJ-4210",
+        "description": "Epic: KYC onboarding v2"
+      }
+    ],
+    "jenkins": [
+      {
+        "ref": "onboarding-service #482",
+        "description": "Last successful deploy to prod"
+      }
+    ],
+    "servicenow": [
+      {
+        "ref": "CHG0043211",
+        "description": "Change request for sanctions API integration"
+      }
+    ],
+    "repo": [
+      {
+        "ref": "org/onboarding-service@main",
+        "description": "Source repo, auth middleware reviewed"
+      }
+    ]
   },
   "actors_components": [
-    {"name": "Customer", "type": "External Actor", "description": "Submits KYC application via web form"},
-    {"name": "API Gateway", "type": "Process", "description": "AuthN + rate limiting"},
-    {"name": "Onboarding Service", "type": "Process", "description": "Validates and persists KYC data"},
-    {"name": "KYC Data Store", "type": "Data Store", "description": "Stores PII and uploaded documents"},
-    {"name": "Sanctions Screening (3rd party)", "type": "External System", "description": "Outbound PII transfer for screening"},
-    {"name": "Jenkins CI/CD", "type": "Process", "description": "Deploys onboarding-service"}
+    {
+      "name": "Customer",
+      "type": "External Actor",
+      "description": "Submits KYC application via web form"
+    },
+    {
+      "name": "API Gateway",
+      "type": "Process",
+      "description": "AuthN + rate limiting"
+    },
+    {
+      "name": "Onboarding Service",
+      "type": "Process",
+      "description": "Validates and persists KYC data"
+    },
+    {
+      "name": "KYC Data Store",
+      "type": "Data Store",
+      "description": "Stores PII and uploaded documents"
+    },
+    {
+      "name": "Sanctions Screening (3rd party)",
+      "type": "External System",
+      "description": "Outbound PII transfer for screening"
+    },
+    {
+      "name": "Jenkins CI/CD",
+      "type": "Process",
+      "description": "Deploys onboarding-service"
+    }
   ],
   "trust_boundaries": [
-    {"boundary": "External <-> Internal", "flows_crossing": "1", "description": "Untrusted customer traffic entering the API Gateway"},
-    {"boundary": "Internal <-> Third Party", "flows_crossing": "4", "description": "Outbound PII to sanctions screening vendor"},
-    {"boundary": "CI/CD <-> Production", "flows_crossing": "5", "description": "Deployment pipeline pushing code into production"}
+    {
+      "boundary": "External <-> Internal",
+      "flows_crossing": "1",
+      "description": "Untrusted customer traffic entering the API Gateway"
+    },
+    {
+      "boundary": "Internal <-> Third Party",
+      "flows_crossing": "4",
+      "description": "Outbound PII to sanctions screening vendor"
+    },
+    {
+      "boundary": "CI/CD <-> Production",
+      "flows_crossing": "5",
+      "description": "Deployment pipeline pushing code into production"
+    }
   ],
   "data_flows": [
-    {"num": 1, "source": "Customer", "destination": "API Gateway", "data_action": "Submit application", "protocol": "HTTPS REST", "threats": ["S-1", "E-1"]},
-    {"num": 2, "source": "API Gateway", "destination": "Onboarding Service", "data_action": "Forward validated request", "protocol": "Internal gRPC", "threats": ["T-1"]},
-    {"num": 3, "source": "Onboarding Service", "destination": "KYC Data Store", "data_action": "Persist KYC record", "protocol": "Internal TLS", "threats": ["I-1"]},
-    {"num": 4, "source": "Onboarding Service", "destination": "Sanctions Screening", "data_action": "Screen applicant", "protocol": "HTTPS REST", "threats": ["I-2", "R-1"]},
-    {"num": 5, "source": "Jenkins CI/CD", "destination": "Onboarding Service", "data_action": "Deploy build", "protocol": "SSH deploy", "threats": ["T-2"]}
+    {
+      "num": 1,
+      "source": "Customer",
+      "destination": "API Gateway",
+      "data_action": "Submit application",
+      "protocol": "HTTPS REST",
+      "threats": [
+        "S-1",
+        "E-1"
+      ]
+    },
+    {
+      "num": 2,
+      "source": "API Gateway",
+      "destination": "Onboarding Service",
+      "data_action": "Forward validated request",
+      "protocol": "Internal gRPC",
+      "threats": [
+        "T-1"
+      ]
+    },
+    {
+      "num": 3,
+      "source": "Onboarding Service",
+      "destination": "KYC Data Store",
+      "data_action": "Persist KYC record",
+      "protocol": "Internal TLS",
+      "threats": [
+        "I-1"
+      ]
+    },
+    {
+      "num": 4,
+      "source": "Onboarding Service",
+      "destination": "Sanctions Screening",
+      "data_action": "Screen applicant",
+      "protocol": "HTTPS REST",
+      "threats": [
+        "I-2",
+        "R-1"
+      ]
+    },
+    {
+      "num": 5,
+      "source": "Jenkins CI/CD",
+      "destination": "Onboarding Service",
+      "data_action": "Deploy build",
+      "protocol": "SSH deploy",
+      "threats": [
+        "T-2"
+      ]
+    }
   ],
   "threats": [
-    {"id": "S-1", "category": "Spoofing", "title": "Session token replay", "description": "Captured session tokens can be replayed from a different device due to missing device-binding.", "affected_flow": "Flow 1", "threat_actor": "Unauthenticated external attacker", "likelihood": 4, "impact": 5, "score": 20, "risk_bucket": "High", "impact_rationale": "Full KYC PII exposure, cross-tenant reach", "existing_controls": "Session tokens expire after 15 minutes", "probability_of_mitigation": "85% - device binding is a well-understood pattern", "residual_risk": "6 (Medium)", "additional_controls_required": ["Bind session to device fingerprint", "Add anomaly detection for geographically impossible logins"], "mitigation": "Implement device-bound session tokens with short TTL", "owner_action": "Fix before next release"},
-    {"id": "E-1", "category": "Elevation of Privilege", "title": "Parameter tampering on applicant status", "description": "Client-controlled status parameter could allow an applicant to self-approve.", "affected_flow": "Flow 1", "threat_actor": "Unauthenticated external attacker", "likelihood": 3, "impact": 5, "score": 15, "risk_bucket": "High", "impact_rationale": "Would allow sanctioned applicant approval - regulatory exposure", "existing_controls": "Server-side validation exists but does not cover all status transitions", "probability_of_mitigation": "90% - server-side state machine is standard", "residual_risk": "4 (Low)", "additional_controls_required": ["Enforce status transitions via a server-side state machine", "Add integration test for illegal transitions"], "mitigation": "Move status transition logic fully server-side with a strict state machine", "owner_action": "Fix before next release"},
-    {"id": "T-1", "category": "Tampering", "title": "Unsigned internal gRPC payload", "description": "Internal gRPC calls between gateway and onboarding service are not signed, allowing tampering by a compromised sidecar.", "affected_flow": "Flow 2", "threat_actor": "Compromised internal service", "likelihood": 2, "impact": 4, "score": 8, "risk_bucket": "Medium", "impact_rationale": "Partial PII tampering, single-service blast radius", "existing_controls": "mTLS between services", "probability_of_mitigation": "80% - message signing is standard", "residual_risk": "4 (Low)", "additional_controls_required": ["Add message-level signing in addition to transport mTLS"], "mitigation": "Add HMAC signing to internal gRPC payloads", "owner_action": "Backlog"},
-    {"id": "I-1", "category": "Information Disclosure", "title": "Unencrypted document field at rest", "description": "One document attachment field in the KYC data store is stored without column-level encryption.", "affected_flow": "Flow 3", "threat_actor": "Insider with DB access", "likelihood": 2, "impact": 5, "score": 10, "risk_bucket": "Medium", "impact_rationale": "Full document exposure if DB is compromised or misconfigured", "existing_controls": "Disk-level encryption at rest, DB access is IAM-gated", "probability_of_mitigation": "85% - column-level encryption is well solved", "residual_risk": "4 (Low)", "additional_controls_required": ["Apply column-level encryption to document fields", "Rotate KMS keys quarterly"], "mitigation": "Encrypt document fields at the application layer before write", "owner_action": "Fix before next release"},
-    {"id": "I-2", "category": "Information Disclosure", "title": "PII sent to sanctions vendor without field minimization", "description": "Full applicant record is sent to the third-party sanctions API instead of only the fields needed for screening.", "affected_flow": "Flow 4", "threat_actor": "Third-party vendor compromise", "likelihood": 3, "impact": 4, "score": 12, "risk_bucket": "Medium", "impact_rationale": "Partial PII exposure if vendor is breached; vendor risk not fully in our control", "existing_controls": "Vendor has signed a DPA", "probability_of_mitigation": "60% - depends on vendor API supporting field-level requests", "residual_risk": "6 (Medium)", "additional_controls_required": ["Data minimization: send only name/DOB/nationality", "Vendor security review cadence"], "mitigation": "Minimize fields sent to third-party screening API", "owner_action": "Fix before next release"},
-    {"id": "R-1", "category": "Repudiation", "title": "No immutable audit log of screening decisions", "description": "Screening pass/fail decisions are not written to an append-only audit log, making it hard to prove a decision was made correctly after the fact.", "affected_flow": "Flow 4", "threat_actor": "Insider / auditor dispute", "likelihood": 3, "impact": 4, "score": 12, "risk_bucket": "Medium", "impact_rationale": "Compliance/audit exposure - cannot demonstrate correct screening for regulator", "existing_controls": "Standard application logs exist but are mutable and not access-controlled", "probability_of_mitigation": "80% - append-only audit logging is standard", "residual_risk": "4 (Low)", "additional_controls_required": ["Write screening decisions to a WORM/append-only audit store"], "mitigation": "Add append-only audit logging for all screening decisions", "owner_action": "Fix before next release"},
-    {"id": "D-1", "category": "Denial of Service", "title": "No rate limit on application submission", "description": "The application submission endpoint has no per-IP or per-account rate limit, allowing a flood of submissions to exhaust review capacity.", "affected_flow": "Flow 1", "threat_actor": "Unauthenticated external attacker / botnet", "likelihood": 4, "impact": 3, "score": 12, "risk_bucket": "Medium", "impact_rationale": "Availability impact on manual review queue, no direct data exposure", "existing_controls": "API Gateway has a global rate limit, not per-account", "probability_of_mitigation": "85% - per-account rate limiting is standard", "residual_risk": "4 (Low)", "additional_controls_required": ["Add per-account and per-IP rate limiting", "CAPTCHA on repeated failures"], "mitigation": "Implement per-account rate limiting at the gateway", "owner_action": "Backlog"},
-    {"id": "T-2", "category": "Tampering", "title": "CI/CD deploy credential lacks scoping", "description": "The Jenkins deploy credential has broad SSH access to the production host rather than a scoped deploy-only account.", "affected_flow": "Flow 5", "threat_actor": "Compromised/malicious CI credential", "likelihood": 2, "impact": 5, "score": 10, "risk_bucket": "Medium", "impact_rationale": "Compromise of this credential yields full production host access", "existing_controls": "Credential stored in Jenkins credential store, not in plaintext", "probability_of_mitigation": "75% - scoped service accounts are standard but require ops buy-in", "residual_risk": "4 (Low)", "additional_controls_required": ["Create scoped deploy-only service account", "Rotate credential and audit access quarterly"], "mitigation": "Scope the CI/CD deploy credential to deploy-only permissions", "owner_action": "Backlog"},
-    {"id": "E-2", "category": "Elevation of Privilege", "title": "Debug endpoint left enabled in production build", "description": "A debug/admin endpoint discovered via repo code search is gated by a header check only, not real authentication.", "affected_flow": "Flow 2", "threat_actor": "Unauthenticated external attacker", "likelihood": 3, "impact": 4, "score": 12, "risk_bucket": "Medium", "impact_rationale": "Could allow bypass of validation logic if reachable externally", "existing_controls": "Endpoint is not routed externally by current gateway config", "probability_of_mitigation": "90% - removing/gating the endpoint is straightforward", "residual_risk": "3 (Low)", "additional_controls_required": ["Remove debug endpoint from production build", "Add build-time lint rule to catch debug routes"], "mitigation": "Strip debug endpoints from production builds via build flag", "owner_action": "Fix before next release"}
+    {
+      "id": "S-1",
+      "category": "Spoofing",
+      "title": "Session token replay",
+      "description": "Captured session tokens can be replayed from a different device due to missing device-binding.",
+      "affected_flow": "Flow 1",
+      "threat_actor": "Unauthenticated external attacker",
+      "likelihood": 4,
+      "impact": 5,
+      "score": 20,
+      "risk_bucket": "High",
+      "impact_rationale": "Full KYC PII exposure, cross-tenant reach",
+      "existing_controls": "Session tokens expire after 15 minutes",
+      "probability_of_mitigation": "85% - device binding is a well-understood pattern",
+      "residual_risk": "6 (Medium)",
+      "additional_controls_required": [
+        "Bind session to device fingerprint",
+        "Add anomaly detection for geographically impossible logins"
+      ],
+      "mitigation": "Implement device-bound session tokens with short TTL",
+      "owner_action": "Fix before next release",
+      "ai_component": "none",
+      "owasp_id": [
+        "A07:2021"
+      ]
+    },
+    {
+      "id": "E-1",
+      "category": "Elevation of Privilege",
+      "title": "Parameter tampering on applicant status",
+      "description": "Client-controlled status parameter could allow an applicant to self-approve.",
+      "affected_flow": "Flow 1",
+      "threat_actor": "Unauthenticated external attacker",
+      "likelihood": 3,
+      "impact": 5,
+      "score": 15,
+      "risk_bucket": "High",
+      "impact_rationale": "Would allow sanctioned applicant approval - regulatory exposure",
+      "existing_controls": "Server-side validation exists but does not cover all status transitions",
+      "probability_of_mitigation": "90% - server-side state machine is standard",
+      "residual_risk": "4 (Low)",
+      "additional_controls_required": [
+        "Enforce status transitions via a server-side state machine",
+        "Add integration test for illegal transitions"
+      ],
+      "mitigation": "Move status transition logic fully server-side with a strict state machine",
+      "owner_action": "Fix before next release",
+      "ai_component": "none",
+      "owasp_id": [
+        "A01:2021",
+        "API5:2023"
+      ]
+    },
+    {
+      "id": "T-1",
+      "category": "Tampering",
+      "title": "Unsigned internal gRPC payload",
+      "description": "Internal gRPC calls between gateway and onboarding service are not signed, allowing tampering by a compromised sidecar.",
+      "affected_flow": "Flow 2",
+      "threat_actor": "Compromised internal service",
+      "likelihood": 2,
+      "impact": 4,
+      "score": 8,
+      "risk_bucket": "Medium",
+      "impact_rationale": "Partial PII tampering, single-service blast radius",
+      "existing_controls": "mTLS between services",
+      "probability_of_mitigation": "80% - message signing is standard",
+      "residual_risk": "4 (Low)",
+      "additional_controls_required": [
+        "Add message-level signing in addition to transport mTLS"
+      ],
+      "mitigation": "Add HMAC signing to internal gRPC payloads",
+      "owner_action": "Backlog",
+      "ai_component": "none",
+      "owasp_id": [
+        "A08:2021",
+        "API8:2023"
+      ]
+    },
+    {
+      "id": "I-1",
+      "category": "Information Disclosure",
+      "title": "Unencrypted document field at rest",
+      "description": "One document attachment field in the KYC data store is stored without column-level encryption.",
+      "affected_flow": "Flow 3",
+      "threat_actor": "Insider with DB access",
+      "likelihood": 2,
+      "impact": 5,
+      "score": 10,
+      "risk_bucket": "Medium",
+      "impact_rationale": "Full document exposure if DB is compromised or misconfigured",
+      "existing_controls": "Disk-level encryption at rest, DB access is IAM-gated",
+      "probability_of_mitigation": "85% - column-level encryption is well solved",
+      "residual_risk": "4 (Low)",
+      "additional_controls_required": [
+        "Apply column-level encryption to document fields",
+        "Rotate KMS keys quarterly"
+      ],
+      "mitigation": "Encrypt document fields at the application layer before write",
+      "owner_action": "Fix before next release",
+      "ai_component": "none",
+      "owasp_id": [
+        "A02:2021"
+      ]
+    },
+    {
+      "id": "I-2",
+      "category": "Information Disclosure",
+      "title": "PII sent to sanctions vendor without field minimization",
+      "description": "Full applicant record is sent to the third-party sanctions API instead of only the fields needed for screening.",
+      "affected_flow": "Flow 4",
+      "threat_actor": "Third-party vendor compromise",
+      "likelihood": 3,
+      "impact": 4,
+      "score": 12,
+      "risk_bucket": "Medium",
+      "impact_rationale": "Partial PII exposure if vendor is breached; vendor risk not fully in our control",
+      "existing_controls": "Vendor has signed a DPA",
+      "probability_of_mitigation": "60% - depends on vendor API supporting field-level requests",
+      "residual_risk": "6 (Medium)",
+      "additional_controls_required": [
+        "Data minimization: send only name/DOB/nationality",
+        "Vendor security review cadence"
+      ],
+      "mitigation": "Minimize fields sent to third-party screening API",
+      "owner_action": "Fix before next release",
+      "ai_component": "none",
+      "owasp_id": [
+        "API6:2023"
+      ]
+    },
+    {
+      "id": "R-1",
+      "category": "Repudiation",
+      "title": "No immutable audit log of screening decisions",
+      "description": "Screening pass/fail decisions are not written to an append-only audit log, making it hard to prove a decision was made correctly after the fact.",
+      "affected_flow": "Flow 4",
+      "threat_actor": "Insider / auditor dispute",
+      "likelihood": 3,
+      "impact": 4,
+      "score": 12,
+      "risk_bucket": "Medium",
+      "impact_rationale": "Compliance/audit exposure - cannot demonstrate correct screening for regulator",
+      "existing_controls": "Standard application logs exist but are mutable and not access-controlled",
+      "probability_of_mitigation": "80% - append-only audit logging is standard",
+      "residual_risk": "4 (Low)",
+      "additional_controls_required": [
+        "Write screening decisions to a WORM/append-only audit store"
+      ],
+      "mitigation": "Add append-only audit logging for all screening decisions",
+      "owner_action": "Fix before next release",
+      "ai_component": "none",
+      "owasp_id": [
+        "A09:2021"
+      ]
+    },
+    {
+      "id": "D-1",
+      "category": "Denial of Service",
+      "title": "No rate limit on application submission",
+      "description": "The application submission endpoint has no per-IP or per-account rate limit, allowing a flood of submissions to exhaust review capacity.",
+      "affected_flow": "Flow 1",
+      "threat_actor": "Unauthenticated external attacker / botnet",
+      "likelihood": 4,
+      "impact": 3,
+      "score": 12,
+      "risk_bucket": "Medium",
+      "impact_rationale": "Availability impact on manual review queue, no direct data exposure",
+      "existing_controls": "API Gateway has a global rate limit, not per-account",
+      "probability_of_mitigation": "85% - per-account rate limiting is standard",
+      "residual_risk": "4 (Low)",
+      "additional_controls_required": [
+        "Add per-account and per-IP rate limiting",
+        "CAPTCHA on repeated failures"
+      ],
+      "mitigation": "Implement per-account rate limiting at the gateway",
+      "owner_action": "Backlog",
+      "ai_component": "none",
+      "owasp_id": [
+        "API4:2023"
+      ]
+    },
+    {
+      "id": "T-2",
+      "category": "Tampering",
+      "title": "CI/CD deploy credential lacks scoping",
+      "description": "The Jenkins deploy credential has broad SSH access to the production host rather than a scoped deploy-only account.",
+      "affected_flow": "Flow 5",
+      "threat_actor": "Compromised/malicious CI credential",
+      "likelihood": 2,
+      "impact": 5,
+      "score": 10,
+      "risk_bucket": "Medium",
+      "impact_rationale": "Compromise of this credential yields full production host access",
+      "existing_controls": "Credential stored in Jenkins credential store, not in plaintext",
+      "probability_of_mitigation": "75% - scoped service accounts are standard but require ops buy-in",
+      "residual_risk": "4 (Low)",
+      "additional_controls_required": [
+        "Create scoped deploy-only service account",
+        "Rotate credential and audit access quarterly"
+      ],
+      "mitigation": "Scope the CI/CD deploy credential to deploy-only permissions",
+      "owner_action": "Backlog",
+      "ai_component": "none",
+      "owasp_id": [
+        "A05:2021",
+        "API8:2023"
+      ]
+    },
+    {
+      "id": "E-2",
+      "category": "Elevation of Privilege",
+      "title": "Debug endpoint left enabled in production build",
+      "description": "A debug/admin endpoint discovered via repo code search is gated by a header check only, not real authentication.",
+      "affected_flow": "Flow 2",
+      "threat_actor": "Unauthenticated external attacker",
+      "likelihood": 3,
+      "impact": 4,
+      "score": 12,
+      "risk_bucket": "Medium",
+      "impact_rationale": "Could allow bypass of validation logic if reachable externally",
+      "existing_controls": "Endpoint is not routed externally by current gateway config",
+      "probability_of_mitigation": "90% - removing/gating the endpoint is straightforward",
+      "residual_risk": "3 (Low)",
+      "additional_controls_required": [
+        "Remove debug endpoint from production build",
+        "Add build-time lint rule to catch debug routes"
+      ],
+      "mitigation": "Strip debug endpoints from production builds via build flag",
+      "owner_action": "Fix before next release",
+      "ai_component": "none",
+      "owasp_id": [
+        "A05:2021"
+      ]
+    }
   ],
   "attack_chains": [
     {
@@ -49,9 +383,33 @@
       "name": "Sanctioned applicant self-approval via session replay + parameter tampering",
       "narrative": "An attacker captures a valid customer session token (S-1), replays it from a second device to bypass device-based anomaly checks, then exploits the client-controlled status parameter (E-1) to move their own application directly to an 'approved' state, skipping the sanctions screening step (I-2/R-1) entirely. Because screening decisions are not written to an immutable audit log (R-1), the bypass is difficult to detect after the fact.",
       "steps": [
-        {"step_num": 1, "threat_id": "S-1", "description": "Attacker captures and replays a customer session token from a second device"},
-        {"step_num": 2, "threat_id": "E-1", "description": "Attacker tampers with the client-controlled status parameter to force an 'approved' state"},
-        {"step_num": 3, "threat_id": "R-1", "description": "Absence of immutable audit logging allows the bypass to go undetected"}
+        {
+          "step_num": 1,
+          "threat_id": "S-1",
+          "description": "Attacker captures and replays a customer session token from a second device",
+          "mitre_attack_technique": [
+            "T1550"
+          ],
+          "mitre_atlas_technique": []
+        },
+        {
+          "step_num": 2,
+          "threat_id": "E-1",
+          "description": "Attacker tampers with the client-controlled status parameter to force an 'approved' state",
+          "mitre_attack_technique": [
+            "T1078"
+          ],
+          "mitre_atlas_technique": []
+        },
+        {
+          "step_num": 3,
+          "threat_id": "R-1",
+          "description": "Absence of immutable audit logging allows the bypass to go undetected",
+          "mitre_attack_technique": [
+            "T1562"
+          ],
+          "mitre_atlas_technique": []
+        }
       ],
       "overall_risk": "High - regulatory and reputational exposure if a sanctioned entity is onboarded undetected"
     },
@@ -60,15 +418,44 @@
       "name": "CI/CD credential compromise leading to malicious deploy",
       "narrative": "An attacker who compromises the Jenkins deploy credential (T-2) - via a phished engineer or a leaked token - gains broad SSH access to the production host and can push a malicious build directly, bypassing code review.",
       "steps": [
-        {"step_num": 1, "threat_id": "T-2", "description": "Attacker obtains the over-scoped Jenkins deploy credential"},
-        {"step_num": 2, "threat_id": "E-2", "description": "Malicious build re-enables the debug endpoint to establish persistence"}
+        {
+          "step_num": 1,
+          "threat_id": "T-2",
+          "description": "Attacker obtains the over-scoped Jenkins deploy credential",
+          "mitre_attack_technique": [],
+          "mitre_atlas_technique": []
+        },
+        {
+          "step_num": 2,
+          "threat_id": "E-2",
+          "description": "Malicious build re-enables the debug endpoint to establish persistence",
+          "mitre_attack_technique": [],
+          "mitre_atlas_technique": []
+        }
       ],
       "overall_risk": "Medium - requires credential compromise as a precondition, but blast radius is full production access"
     }
   ],
   "compliance_gaps": [
-    {"control_name": "Outbound PII Transfer - Data Minimization", "compliance_status": "Partially Compliant", "gap_description": "Full applicant records are transferred to the third-party sanctions vendor instead of only the minimum fields required for screening, exceeding the data minimization principle in the internal data handling policy.", "recommended_additional_controls": ["Implement field-level minimization before the outbound call", "Add a quarterly vendor data-flow review", "Update the DPA to explicitly enumerate transferred fields"]},
-    {"control_name": "CI/CD Credential Scoping", "compliance_status": "Partially Compliant", "gap_description": "Deploy credentials are stored securely but are not scoped to least privilege, partially satisfying the access-control policy.", "recommended_additional_controls": ["Create scoped deploy-only service accounts per pipeline", "Enforce quarterly credential rotation and access review"]}
+    {
+      "control_name": "Outbound PII Transfer - Data Minimization",
+      "compliance_status": "Partially Compliant",
+      "gap_description": "Full applicant records are transferred to the third-party sanctions vendor instead of only the minimum fields required for screening, exceeding the data minimization principle in the internal data handling policy.",
+      "recommended_additional_controls": [
+        "Implement field-level minimization before the outbound call",
+        "Add a quarterly vendor data-flow review",
+        "Update the DPA to explicitly enumerate transferred fields"
+      ]
+    },
+    {
+      "control_name": "CI/CD Credential Scoping",
+      "compliance_status": "Partially Compliant",
+      "gap_description": "Deploy credentials are stored securely but are not scoped to least privilege, partially satisfying the access-control policy.",
+      "recommended_additional_controls": [
+        "Create scoped deploy-only service accounts per pipeline",
+        "Enforce quarterly credential rotation and access review"
+      ]
+    }
   ],
   "recommendations": [
     "Implement device-bound session tokens with short TTL to close S-1 (mitigates S-1).",
@@ -88,5 +475,14 @@
   "diagrams": {
     "dfd_drawio_filename": "Payment_Onboarding_Service_DFD.drawio",
     "threat_model_drawio_filename": "Payment_Onboarding_Service_Threat_Model.drawio"
+  },
+  "framework_coverage": {
+    "stride": true,
+    "pasta_full": false,
+    "owasp_top10": true,
+    "owasp_api_top10": true,
+    "owasp_llm_top10": false,
+    "mitre_attack": true,
+    "mitre_atlas": false
   }
 }

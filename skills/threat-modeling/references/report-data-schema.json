@@ -1,17 +1,30 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "ThreatModelReportData",
-  "description": "Input shape consumed by scripts/build_docx_report.py and scripts/build_xlsx_report.py. See examples/sample_report_data.json for a fully worked example.",
+  "description": "Input shape consumed by scripts/build_docx_report.py and scripts/build_xlsx_report.py. See examples/sample_report_data.json (conventional app) and examples/sample_ai_report_data.json (AI/LLM-scoped) for fully worked examples.",
   "type": "object",
   "required": ["service_name", "date", "threats"],
   "properties": {
     "service_name": {"type": "string"},
-    "methodology": {"type": "string"},
+    "methodology": {"type": "string", "description": "e.g. 'STRIDE + PASTA-style scoring + attack-chain mapping', or 'Full 7-stage PASTA' for higher-rigor engagements -- see references/pasta-methodology.md"},
     "date": {"type": "string", "format": "date"},
     "status": {"type": "string", "enum": ["Draft", "Final", "Under Review"]},
     "sources_summary": {"type": "array", "items": {"type": "string"}},
     "executive_summary": {"type": "string"},
     "scope": {"type": "string"},
+    "framework_coverage": {
+      "type": "object",
+      "description": "Optional summary of which frameworks were applied to this assessment -- rendered in the report's methodology section.",
+      "properties": {
+        "stride": {"type": "boolean"},
+        "pasta_full": {"type": "boolean", "description": "true if all 7 PASTA stages were followed, not just the lightweight scoring subset"},
+        "owasp_top10": {"type": "boolean"},
+        "owasp_api_top10": {"type": "boolean"},
+        "owasp_llm_top10": {"type": "boolean"},
+        "mitre_attack": {"type": "boolean"},
+        "mitre_atlas": {"type": "boolean"}
+      }
+    },
     "sources": {
       "type": "object",
       "description": "Keyed by connector: jira, jenkins, servicenow, repo",
@@ -30,7 +43,7 @@
         "required": ["name", "type"],
         "properties": {
           "name": {"type": "string"},
-          "type": {"type": "string", "enum": ["External Actor", "Process", "Data Store", "External System"]},
+          "type": {"type": "string", "enum": ["External Actor", "Process", "Data Store", "External System", "Training Pipeline", "Model Registry", "Vector Store", "Inference Endpoint", "Agent / Tool Layer"]},
           "description": {"type": "string"}
         }
       }
@@ -73,6 +86,8 @@
           "description": {"type": "string"},
           "affected_flow": {"type": "string"},
           "threat_actor": {"type": "string"},
+          "ai_component": {"type": "string", "enum": ["none", "data_pipeline", "training_pipeline", "model_registry", "vector_store", "inference_endpoint", "agent_orchestration", "mlops_cicd"], "description": "Which AI/ML pipeline component this threat targets, if any -- see references/ai-threat-taxonomy.md. Use 'none' for conventional app/API threats."},
+          "owasp_id": {"type": "array", "items": {"type": "string"}, "description": "One or more IDs from references/owasp-mappings.md, e.g. ['A01:2021'], ['API4:2023'], ['LLM01:2025']"},
           "likelihood": {"type": "integer", "minimum": 1, "maximum": 5},
           "impact": {"type": "integer", "minimum": 1, "maximum": 5},
           "score": {"type": "integer", "minimum": 1, "maximum": 25},
@@ -103,7 +118,9 @@
               "properties": {
                 "step_num": {"type": "integer"},
                 "threat_id": {"type": "string"},
-                "description": {"type": "string"}
+                "description": {"type": "string"},
+                "mitre_attack_technique": {"type": "array", "items": {"type": "string"}, "description": "e.g. ['T1078'] -- see references/mitre-mappings.md"},
+                "mitre_atlas_technique": {"type": "array", "items": {"type": "string"}, "description": "e.g. ['AML.T0051'] -- see references/mitre-mappings.md"}
               }
             }
           },

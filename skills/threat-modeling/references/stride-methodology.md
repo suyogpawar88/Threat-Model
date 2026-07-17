@@ -72,3 +72,19 @@ Every 4-or-5 impact score must name the specific driver (which factor in the tab
 Clustering everything at Medium to avoid a hard conversation. A register that inflates every threat
 to High is as useless as one that calls everything fine. Use the full 1–5 range on both dimensions,
 and let the score — not gut feel — drive the final Risk Prioritization ordering in the report.
+
+## Applying STRIDE to AI/ML and LLM Components
+
+If Step 1 scoping identifies any AI/ML pipeline component (training/fine-tuning, model registry,
+vector store/RAG, inference endpoint, agent/tool-orchestration layer) — or `repo_connector.py`'s
+`detect_ai_stack` tool flags AI framework usage in the repo — walk `ai-threat-taxonomy.md` in full
+alongside this file. It extends each of the six categories above with AI-specific threats (prompt
+injection, training data poisoning, model extraction, excessive agency, etc.), each pre-mapped to an
+OWASP Top 10 for LLM Applications ID and, where relevant, a MITRE ATLAS technique. The
+minimum-2-threats-per-category rule still applies; for an AI-scoped system, at least one threat per
+category should come from the AI-specific list rather than only the generic web-app equivalents.
+
+For engagements that need full business-risk-driven rigor (compliance audits, pre-launch gates on
+regulated AI systems) rather than this lightweight scoring layer, see `pasta-methodology.md` for the
+complete 7-stage PASTA process, which this file's scoring approach is intentionally a lightweight
+subset of.

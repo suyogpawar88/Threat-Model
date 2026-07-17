@@ -1,0 +1,713 @@
+{
+  "service_name": "AI Support Agent (RAG + Tool-Calling)",
+  "methodology": "STRIDE + AI/ML threat taxonomy + PASTA-style business-impact scoring + attack-chain mapping (MITRE ATT&CK / ATLAS-tagged) + compensating-controls assessment + OWASP Top 10 / API Security Top 10 / LLM Top 10 mapping",
+  "date": "2026-07-17",
+  "status": "Draft",
+  "sources_summary": [
+    "Jira AI-1188 (epic: AI support agent GA)",
+    "GitHub org/support-agent (detect_ai_stack flagged langchain, pinecone, mlflow)",
+    "Jenkins support-agent-finetune pipeline",
+    "ServiceNow CHG0051902"
+  ],
+  "executive_summary": "The AI Support Agent answers customer questions using a RAG pipeline over a support knowledge-base vector store, and can autonomously call a CRM/refund tool. Fifteen threats were identified across all six STRIDE categories, four rated High risk. Two plausible attack chains were mapped: an indirect prompt-injection-to-fraudulent-refund chain (High), and a fine-tuning/model-registry supply-chain compromise chain (Medium-High). One control (LLM tool-call output validation) was found partially compliant.",
+  "scope": "In scope: Chat API Gateway, Support Agent Orchestrator (LangGraph), LLM Inference Endpoint, Support KB Vector Store and its ingestion pipeline, Fine-Tuning Pipeline, Model Registry, and the CRM/Refund tool integration. Out of scope: the CRM system's own internal security posture beyond the tool-call interface.",
+  "sources": {
+    "jira": [
+      {
+        "ref": "AI-1188",
+        "description": "Epic: AI support agent GA"
+      }
+    ],
+    "jenkins": [
+      {
+        "ref": "support-agent-finetune #57",
+        "description": "Last fine-tuning pipeline run"
+      }
+    ],
+    "servicenow": [
+      {
+        "ref": "CHG0051902",
+        "description": "Change request for CRM refund-tool integration"
+      }
+    ],
+    "repo": [
+      {
+        "ref": "org/support-agent@main",
+        "description": "detect_ai_stack: langchain, pinecone, mlflow, transformers markers found"
+      }
+    ]
+  },
+  "actors_components": [
+    {
+      "name": "Customer",
+      "type": "External Actor",
+      "description": "Submits support chat messages"
+    },
+    {
+      "name": "Chat API Gateway",
+      "type": "Process",
+      "description": "AuthN + rate limiting"
+    },
+    {
+      "name": "Support Agent Orchestrator",
+      "type": "Agent / Tool Layer",
+      "description": "LangGraph agent: plans, calls tools, calls the LLM"
+    },
+    {
+      "name": "LLM Inference Endpoint",
+      "type": "Inference Endpoint",
+      "description": "Hosted model serving completions"
+    },
+    {
+      "name": "Support KB Vector Store",
+      "type": "Vector Store",
+      "description": "Embeddings of support docs used for RAG retrieval"
+    },
+    {
+      "name": "Doc Ingestion Pipeline",
+      "type": "Process",
+      "description": "Pulls docs from Confluence into the vector store"
+    },
+    {
+      "name": "Fine-Tuning Pipeline",
+      "type": "Training Pipeline",
+      "description": "Periodic fine-tune on support transcripts"
+    },
+    {
+      "name": "Model Registry",
+      "type": "Model Registry",
+      "description": "MLflow-backed fine-tuned model versions"
+    },
+    {
+      "name": "CRM / Refund Tool",
+      "type": "External System",
+      "description": "Agent-callable tool with refund authority"
+    }
+  ],
+  "trust_boundaries": [
+    {
+      "boundary": "External <-> Internal",
+      "flows_crossing": "1",
+      "description": "Untrusted customer chat traffic entering the API gateway"
+    },
+    {
+      "boundary": "Internal <-> Business Systems",
+      "flows_crossing": "6",
+      "description": "Agent-initiated calls into the CRM/refund tool with real financial effect"
+    },
+    {
+      "boundary": "External content <-> Trusted context",
+      "flows_crossing": "4, 5",
+      "description": "Third-party-authored documents entering the model's trusted context via RAG retrieval"
+    },
+    {
+      "boundary": "Fine-Tuning <-> Production Serving",
+      "flows_crossing": "7, 8",
+      "description": "Model artifacts promoted from the fine-tuning pipeline into live inference"
+    }
+  ],
+  "data_flows": [
+    {
+      "num": 1,
+      "source": "Customer",
+      "destination": "Chat API Gateway",
+      "data_action": "Submit support message",
+      "protocol": "HTTPS REST",
+      "threats": [
+        "S-1",
+        "T-1"
+      ]
+    },
+    {
+      "num": 2,
+      "source": "Chat API Gateway",
+      "destination": "Support Agent Orchestrator",
+      "data_action": "Forward conversation",
+      "protocol": "Internal gRPC",
+      "threats": [
+        "E-3"
+      ]
+    },
+    {
+      "num": 3,
+      "source": "Support Agent Orchestrator",
+      "destination": "LLM Inference Endpoint",
+      "data_action": "Prompt + retrieved context",
+      "protocol": "HTTPS REST",
+      "threats": [
+        "I-1",
+        "D-1"
+      ]
+    },
+    {
+      "num": 4,
+      "source": "Support KB Vector Store",
+      "destination": "Support Agent Orchestrator",
+      "data_action": "Retrieve KB context (RAG)",
+      "protocol": "Internal API",
+      "threats": [
+        "T-2",
+        "I-2"
+      ]
+    },
+    {
+      "num": 5,
+      "source": "Doc Ingestion Pipeline",
+      "destination": "Support KB Vector Store",
+      "data_action": "Ingest support docs",
+      "protocol": "Internal batch job",
+      "threats": [
+        "T-2"
+      ]
+    },
+    {
+      "num": 6,
+      "source": "Support Agent Orchestrator",
+      "destination": "CRM / Refund Tool",
+      "data_action": "Call refund/account tool",
+      "protocol": "HTTPS REST",
+      "threats": [
+        "E-1",
+        "E-2"
+      ]
+    },
+    {
+      "num": 7,
+      "source": "Fine-Tuning Pipeline",
+      "destination": "Model Registry",
+      "data_action": "Publish fine-tuned model",
+      "protocol": "Internal MLflow API",
+      "threats": [
+        "T-3"
+      ]
+    },
+    {
+      "num": 8,
+      "source": "Model Registry",
+      "destination": "LLM Inference Endpoint",
+      "data_action": "Deploy model version",
+      "protocol": "Internal deploy job",
+      "threats": [
+        "T-4",
+        "R-2"
+      ]
+    }
+  ],
+  "threats": [
+    {
+      "id": "S-1",
+      "category": "Spoofing",
+      "title": "API key / session spoofing on chat endpoint",
+      "description": "Weak client authentication allows an attacker to impersonate a legitimate customer session.",
+      "affected_flow": "Flow 1",
+      "threat_actor": "Unauthenticated external attacker",
+      "ai_component": "none",
+      "owasp_id": [
+        "A07:2021",
+        "API2:2023"
+      ],
+      "likelihood": 3,
+      "impact": 4,
+      "score": 12,
+      "risk_bucket": "Medium",
+      "impact_rationale": "Access to one customer's conversation history and account context",
+      "existing_controls": "Short-lived bearer tokens",
+      "probability_of_mitigation": "85% - standard auth hardening pattern",
+      "residual_risk": "6 (Medium)",
+      "additional_controls_required": [
+        "Bind tokens to device fingerprint",
+        "Add anomaly detection for session reuse"
+      ],
+      "mitigation": "Strengthen session binding and add reuse detection",
+      "owner_action": "Fix before next release"
+    },
+    {
+      "id": "S-2",
+      "category": "Spoofing",
+      "title": "Forged tool-call result replayed into agent context",
+      "description": "A manipulated or replayed tool response is fed back into the agent's context, redirecting its next planning step.",
+      "affected_flow": "Flow 6",
+      "threat_actor": "Compromised tool integration / MitM on tool channel",
+      "ai_component": "agent_orchestration",
+      "owasp_id": [
+        "LLM01:2025"
+      ],
+      "likelihood": 2,
+      "impact": 4,
+      "score": 8,
+      "risk_bucket": "Medium",
+      "impact_rationale": "Could redirect agent to take an unintended follow-up action",
+      "existing_controls": "Tool responses transported over TLS only",
+      "probability_of_mitigation": "70% - requires signing tool responses, a less common pattern",
+      "residual_risk": "6 (Medium)",
+      "additional_controls_required": [
+        "Sign tool-call responses",
+        "Validate response schema strictly before re-injection into context"
+      ],
+      "mitigation": "Add integrity verification to tool-call responses",
+      "owner_action": "Backlog"
+    },
+    {
+      "id": "T-1",
+      "category": "Tampering",
+      "title": "Direct prompt injection overrides system instructions",
+      "description": "A crafted customer message overrides the agent's system prompt, causing it to ignore safety/business rules.",
+      "affected_flow": "Flow 1",
+      "threat_actor": "Unauthenticated external attacker",
+      "ai_component": "agent_orchestration",
+      "owasp_id": [
+        "LLM01:2025"
+      ],
+      "likelihood": 5,
+      "impact": 5,
+      "score": 25,
+      "risk_bucket": "High",
+      "impact_rationale": "Direct path to bypassing all downstream business-rule guardrails",
+      "existing_controls": "Basic instruction-hierarchy prompt, no adversarial testing performed",
+      "probability_of_mitigation": "60% - prompt injection has no complete technical fix today",
+      "residual_risk": "12 (Medium)",
+      "additional_controls_required": [
+        "Add an input/output guardrail model",
+        "Adversarial red-team testing before each prompt change",
+        "Constrain agent actions to an allow-listed tool set regardless of instructions"
+      ],
+      "mitigation": "Layer a dedicated guardrail/classifier in front of the agent",
+      "owner_action": "Fix before next release"
+    },
+    {
+      "id": "T-2",
+      "category": "Tampering",
+      "title": "Indirect prompt injection via poisoned KB document",
+      "description": "An attacker-authored support article ingested into the vector store contains hidden instructions that the model later treats as trusted context during RAG retrieval.",
+      "affected_flow": "Flow 4, Flow 5",
+      "threat_actor": "Malicious/compromised document author",
+      "ai_component": "vector_store",
+      "owasp_id": [
+        "LLM01:2025",
+        "LLM08:2025"
+      ],
+      "likelihood": 3,
+      "impact": 5,
+      "score": 15,
+      "risk_bucket": "High",
+      "impact_rationale": "Same override power as direct injection, but reaches every user querying that topic",
+      "existing_controls": "Confluence access is SSO-gated for internal authors only",
+      "probability_of_mitigation": "65% - content scanning helps but can't catch every encoding trick",
+      "residual_risk": "8 (Medium)",
+      "additional_controls_required": [
+        "Scan ingested documents for embedded instructions before indexing",
+        "Strip/neutralize instruction-like patterns at ingestion time"
+      ],
+      "mitigation": "Add an ingestion-time content sanitization and anomaly-detection step",
+      "owner_action": "Fix before next release"
+    },
+    {
+      "id": "T-3",
+      "category": "Tampering",
+      "title": "Fine-tuning data poisoning via unvalidated transcripts",
+      "description": "Support transcripts used for fine-tuning are not validated for adversarial content, allowing a poisoned example to bias or backdoor the fine-tuned model.",
+      "affected_flow": "Flow 7",
+      "threat_actor": "Compromised fine-tuning pipeline credential / malicious insider",
+      "ai_component": "training_pipeline",
+      "owasp_id": [
+        "LLM04:2025"
+      ],
+      "likelihood": 2,
+      "impact": 5,
+      "score": 10,
+      "risk_bucket": "Medium",
+      "impact_rationale": "A backdoored model affects every customer conversation post-deploy",
+      "existing_controls": "Pipeline runs under a scoped service account",
+      "probability_of_mitigation": "70% - dataset validation/provenance tracking is a known but non-trivial pattern",
+      "residual_risk": "6 (Medium)",
+      "additional_controls_required": [
+        "Validate/quarantine training data before use",
+        "Track dataset provenance per fine-tuning run"
+      ],
+      "mitigation": "Add a training-data validation and provenance-tracking stage",
+      "owner_action": "Backlog"
+    },
+    {
+      "id": "T-4",
+      "category": "Tampering",
+      "title": "Unsigned model artifact deploy from registry",
+      "description": "Model artifacts are promoted from the registry to the inference endpoint without signature verification, allowing a substituted model to be deployed undetected.",
+      "affected_flow": "Flow 8",
+      "threat_actor": "Compromised CI/CD or registry credential",
+      "ai_component": "model_registry",
+      "owasp_id": [
+        "LLM03:2025",
+        "A08:2021"
+      ],
+      "likelihood": 2,
+      "impact": 5,
+      "score": 10,
+      "risk_bucket": "Medium",
+      "impact_rationale": "Silent model substitution in production, hard to detect without signing",
+      "existing_controls": "Registry access is IAM-gated",
+      "probability_of_mitigation": "85% - artifact signing is a well-solved pattern",
+      "residual_risk": "4 (Low)",
+      "additional_controls_required": [
+        "Sign model artifacts and verify signature at deploy time",
+        "Alert on any unsigned or unexpected model version reaching production"
+      ],
+      "mitigation": "Require signed model artifacts for deployment",
+      "owner_action": "Fix before next release"
+    },
+    {
+      "id": "R-1",
+      "category": "Repudiation",
+      "title": "No immutable log of prompts, completions, and tool calls",
+      "description": "Conversation, retrieved context, and tool-call history are logged mutably with no access control, making post-incident reconstruction unreliable.",
+      "affected_flow": "Flow 3, Flow 6",
+      "threat_actor": "Insider / auditor dispute",
+      "ai_component": "agent_orchestration",
+      "owasp_id": [
+        "A09:2021"
+      ],
+      "likelihood": 3,
+      "impact": 4,
+      "score": 12,
+      "risk_bucket": "Medium",
+      "impact_rationale": "Cannot reliably reconstruct an incident involving injected instructions or a disputed refund",
+      "existing_controls": "Standard application logs exist but are mutable",
+      "probability_of_mitigation": "80% - append-only audit logging is standard",
+      "residual_risk": "4 (Low)",
+      "additional_controls_required": [
+        "Write prompts/completions/tool calls to a WORM/append-only audit store"
+      ],
+      "mitigation": "Add append-only audit logging across the agent pipeline",
+      "owner_action": "Fix before next release"
+    },
+    {
+      "id": "R-2",
+      "category": "Repudiation",
+      "title": "No record of which model version served a given inference",
+      "description": "Inference responses aren't tagged with the serving model/weights version, blocking root-cause analysis after a bad output is reported.",
+      "affected_flow": "Flow 8",
+      "threat_actor": "Insider dispute / incident responder",
+      "ai_component": "model_registry",
+      "owasp_id": [
+        "A09:2021"
+      ],
+      "likelihood": 1,
+      "impact": 3,
+      "score": 3,
+      "risk_bucket": "Low",
+      "impact_rationale": "Slows incident response but doesn't directly enable an attack",
+      "existing_controls": "Model registry retains version history internally",
+      "probability_of_mitigation": "90% - tagging responses with model version is straightforward",
+      "residual_risk": "2 (Low)",
+      "additional_controls_required": [
+        "Tag every inference response with the serving model version"
+      ],
+      "mitigation": "Add model-version tagging to inference responses/logs",
+      "owner_action": "Backlog"
+    },
+    {
+      "id": "I-1",
+      "category": "Information Disclosure",
+      "title": "System prompt leakage via adversarial questioning",
+      "description": "An attacker extracts the system prompt through targeted questioning, revealing internal business logic and tool schemas.",
+      "affected_flow": "Flow 3",
+      "threat_actor": "Unauthenticated external attacker",
+      "ai_component": "inference_endpoint",
+      "owasp_id": [
+        "LLM07:2025"
+      ],
+      "likelihood": 4,
+      "impact": 3,
+      "score": 12,
+      "risk_bucket": "Medium",
+      "impact_rationale": "Reveals internal tool schemas/business rules, aiding further attacks but no direct data exposure",
+      "existing_controls": "None identified",
+      "probability_of_mitigation": "55% - full prevention is not currently solved, only mitigation",
+      "residual_risk": "8 (Medium)",
+      "additional_controls_required": [
+        "Add output filtering for system-prompt-like content",
+        "Avoid placing secrets/sensitive logic directly in the system prompt"
+      ],
+      "mitigation": "Add a response filter and move sensitive logic out of the prompt",
+      "owner_action": "Backlog"
+    },
+    {
+      "id": "I-2",
+      "category": "Information Disclosure",
+      "title": "Cross-tenant PII bleed through retrieved RAG context",
+      "description": "Vector store retrieval is not scoped per tenant, risking one customer's data being surfaced in another customer's conversation.",
+      "affected_flow": "Flow 4",
+      "threat_actor": "Unauthenticated external attacker / adjacent tenant",
+      "ai_component": "vector_store",
+      "owasp_id": [
+        "LLM02:2025",
+        "LLM08:2025"
+      ],
+      "likelihood": 3,
+      "impact": 5,
+      "score": 15,
+      "risk_bucket": "High",
+      "impact_rationale": "Full cross-tenant PII exposure if retrieval scoping fails",
+      "existing_controls": "Logical namespace separation in the vector store",
+      "probability_of_mitigation": "80% - metadata-filtered retrieval is a standard pattern",
+      "residual_risk": "6 (Medium)",
+      "additional_controls_required": [
+        "Enforce tenant ID as a mandatory retrieval filter, not just a namespace convention",
+        "Add automated tests for cross-tenant retrieval leakage"
+      ],
+      "mitigation": "Enforce hard tenant-scoped filtering at the retrieval layer",
+      "owner_action": "Fix before next release"
+    },
+    {
+      "id": "D-1",
+      "category": "Denial of Service",
+      "title": "Unbounded consumption - no token/turn limits",
+      "description": "No limit on prompt length, output length, or conversation turns allows a single user to exhaust inference capacity/budget.",
+      "affected_flow": "Flow 3",
+      "threat_actor": "Unauthenticated external attacker / botnet",
+      "ai_component": "inference_endpoint",
+      "owasp_id": [
+        "LLM10:2025"
+      ],
+      "likelihood": 4,
+      "impact": 3,
+      "score": 12,
+      "risk_bucket": "Medium",
+      "impact_rationale": "Cost exhaustion and degraded availability for other customers",
+      "existing_controls": "Gateway has a global request-per-minute limit",
+      "probability_of_mitigation": "85% - per-user token/turn budgets are standard",
+      "residual_risk": "4 (Low)",
+      "additional_controls_required": [
+        "Add per-user token and turn budgets",
+        "Alert on anomalous per-user token consumption"
+      ],
+      "mitigation": "Implement per-user token/turn budgets at the orchestrator",
+      "owner_action": "Backlog"
+    },
+    {
+      "id": "D-2",
+      "category": "Denial of Service",
+      "title": "Recursive agent tool-call loop exhausts compute",
+      "description": "No cap on agent planning depth allows a crafted input to induce a recursive tool-call loop that consumes compute/cost until timeout.",
+      "affected_flow": "Flow 6",
+      "threat_actor": "Unauthenticated external attacker",
+      "ai_component": "agent_orchestration",
+      "owasp_id": [
+        "LLM10:2025"
+      ],
+      "likelihood": 3,
+      "impact": 3,
+      "score": 9,
+      "risk_bucket": "Medium",
+      "impact_rationale": "Cost/availability impact, contained to the agent's own compute budget",
+      "existing_controls": "30-second orchestration timeout",
+      "probability_of_mitigation": "85% - max-iteration caps are standard in agent frameworks",
+      "residual_risk": "3 (Low)",
+      "additional_controls_required": [
+        "Add an explicit max-planning-iterations cap independent of the timeout"
+      ],
+      "mitigation": "Add a hard cap on agent planning/tool-call iterations",
+      "owner_action": "Backlog"
+    },
+    {
+      "id": "E-1",
+      "category": "Elevation of Privilege",
+      "title": "Excessive agency - refund tool callable without human approval",
+      "description": "The agent can autonomously call the CRM refund tool with no human-in-the-loop approval step, regardless of refund amount.",
+      "affected_flow": "Flow 6",
+      "threat_actor": "Unauthenticated external attacker (via prompt injection)",
+      "ai_component": "agent_orchestration",
+      "owasp_id": [
+        "LLM06:2025"
+      ],
+      "likelihood": 4,
+      "impact": 5,
+      "score": 20,
+      "risk_bucket": "High",
+      "impact_rationale": "Direct financial fraud path if combined with a successful prompt injection",
+      "existing_controls": "Refund tool has a per-transaction dollar cap",
+      "probability_of_mitigation": "80% - human-in-the-loop approval for high-risk actions is a standard mitigation for excessive agency",
+      "residual_risk": "8 (Medium)",
+      "additional_controls_required": [
+        "Require human approval for any refund above a low threshold",
+        "Rate-limit refund actions per conversation/account"
+      ],
+      "mitigation": "Add a human-approval gate for refund tool calls above a low threshold",
+      "owner_action": "Fix before next release"
+    },
+    {
+      "id": "E-2",
+      "category": "Elevation of Privilege",
+      "title": "Insecure output handling on CRM tool-call parameters",
+      "description": "The agent's generated tool-call parameters (account ID, refund amount) are passed to the CRM API without server-side validation, treating model output as trusted input.",
+      "affected_flow": "Flow 6",
+      "threat_actor": "Unauthenticated external attacker (via prompt injection)",
+      "ai_component": "agent_orchestration",
+      "owasp_id": [
+        "LLM05:2025"
+      ],
+      "likelihood": 3,
+      "impact": 4,
+      "score": 12,
+      "risk_bucket": "Medium",
+      "impact_rationale": "Could allow a refund to an attacker-controlled account if combined with injection",
+      "existing_controls": "CRM API validates account ownership server-side",
+      "probability_of_mitigation": "85% - treating model output as untrusted input is a standard fix",
+      "residual_risk": "4 (Low)",
+      "additional_controls_required": [
+        "Validate all tool-call parameters server-side as if user-submitted",
+        "Never let the model choose the destination account directly"
+      ],
+      "mitigation": "Validate and constrain tool-call parameters server-side",
+      "owner_action": "Fix before next release"
+    },
+    {
+      "id": "E-3",
+      "category": "Elevation of Privilege",
+      "title": "Missing per-conversation authorization scoping",
+      "description": "The chat gateway forwards conversations to the orchestrator without per-conversation authorization scoping, allowing a function-level authorization gap between the two services.",
+      "affected_flow": "Flow 2",
+      "threat_actor": "Compromised internal service",
+      "ai_component": "none",
+      "owasp_id": [
+        "A01:2021",
+        "API5:2023"
+      ],
+      "likelihood": 3,
+      "impact": 4,
+      "score": 12,
+      "risk_bucket": "Medium",
+      "impact_rationale": "Could allow cross-conversation/account access if the gateway's own authz is bypassed",
+      "existing_controls": "mTLS between gateway and orchestrator",
+      "probability_of_mitigation": "80% - service-to-service authorization scoping is standard",
+      "residual_risk": "4 (Low)",
+      "additional_controls_required": [
+        "Pass and verify a scoped conversation/account token on every internal call"
+      ],
+      "mitigation": "Add function-level authorization scoping between gateway and orchestrator",
+      "owner_action": "Backlog"
+    }
+  ],
+  "attack_chains": [
+    {
+      "chain_id": "AC-1",
+      "name": "Indirect prompt injection to fraudulent refund via excessive agency",
+      "narrative": "An attacker publishes a support article containing hidden instructions, which is ingested into the KB vector store (T-2). When a customer's query retrieves that article as RAG context, the model treats the hidden instructions as trusted, directing the agent to issue a refund to an attacker-controlled account. Because the agent has excessive agency over the refund tool (E-1) and its tool-call parameters aren't independently validated (E-2), the refund executes without human review. The absence of immutable audit logging (R-1) makes the fraudulent refund difficult to trace back to the poisoned document afterward.",
+      "steps": [
+        {
+          "step_num": 1,
+          "threat_id": "T-2",
+          "description": "Attacker-authored KB article with hidden instructions is retrieved as RAG context for an unrelated customer query",
+          "mitre_attack_technique": [],
+          "mitre_atlas_technique": [
+            "AML.T0051"
+          ]
+        },
+        {
+          "step_num": 2,
+          "threat_id": "E-1",
+          "description": "Agent, following the injected instructions, autonomously calls the refund tool with no human approval gate",
+          "mitre_attack_technique": [],
+          "mitre_atlas_technique": [
+            "AML.T0053"
+          ]
+        },
+        {
+          "step_num": 3,
+          "threat_id": "E-2",
+          "description": "Attacker-controlled refund amount/account parameters are passed to the CRM API without independent validation",
+          "mitre_attack_technique": [],
+          "mitre_atlas_technique": []
+        },
+        {
+          "step_num": 4,
+          "threat_id": "R-1",
+          "description": "Mutable, unaudited logs make the fraudulent refund difficult to trace back to the poisoned document",
+          "mitre_attack_technique": [
+            "T1562"
+          ],
+          "mitre_atlas_technique": []
+        }
+      ],
+      "overall_risk": "High - direct financial fraud via autonomous tool execution, compounded by weak post-incident traceability; requires the attacker to get content indexed into the KB as a precondition"
+    },
+    {
+      "chain_id": "AC-2",
+      "name": "Fine-tuning pipeline compromise to silent production model substitution",
+      "narrative": "An attacker compromises the fine-tuning pipeline's service credential and injects poisoned transcripts, producing a subtly backdoored model (T-3). The poisoned artifact is promoted through the registry to the inference endpoint without signature verification (T-4), and because inference responses aren't tagged with a model version (R-2), the substitution goes unnoticed until customer-facing behavior anomalies are reported.",
+      "steps": [
+        {
+          "step_num": 1,
+          "threat_id": "T-3",
+          "description": "Attacker uses a compromised fine-tuning credential to inject poisoned training transcripts",
+          "mitre_attack_technique": [
+            "T1078"
+          ],
+          "mitre_atlas_technique": [
+            "AML.T0020"
+          ]
+        },
+        {
+          "step_num": 2,
+          "threat_id": "T-4",
+          "description": "The resulting backdoored model artifact is promoted to the inference endpoint without signature verification",
+          "mitre_attack_technique": [
+            "T1195"
+          ],
+          "mitre_atlas_technique": [
+            "AML.T0018"
+          ]
+        },
+        {
+          "step_num": 3,
+          "threat_id": "R-2",
+          "description": "Lack of model-version tagging on inference responses delays detection of the substitution",
+          "mitre_attack_technique": [
+            "T1562"
+          ],
+          "mitre_atlas_technique": []
+        }
+      ],
+      "overall_risk": "Medium-High - a backdoored model can be served to all customers before detection; requires credential compromise as a precondition, but blast radius spans the full customer base"
+    }
+  ],
+  "compliance_gaps": [
+    {
+      "control_name": "LLM Tool-Call Output Validation",
+      "compliance_status": "Partially Compliant",
+      "gap_description": "Server-side validation exists for account ownership on the CRM tool, but refund amount and other tool-call parameters generated by the model are not independently re-validated against business rules before execution.",
+      "recommended_additional_controls": [
+        "Add a business-rule validation layer for every tool-call parameter, independent of the model's own reasoning",
+        "Add a human-approval gate for refund actions above a defined threshold",
+        "Add automated adversarial test cases (prompt injection attempts) to the pre-release test suite"
+      ]
+    }
+  ],
+  "recommendations": [
+    "Layer a dedicated input/output guardrail model in front of the agent to reduce (not eliminate) prompt injection risk (mitigates T-1, T-2).",
+    "Add an ingestion-time content sanitization step for all documents entering the vector store (mitigates T-2).",
+    "Require human approval for refund tool calls above a low threshold, and validate all tool-call parameters server-side (mitigates E-1, E-2, supports AC-1 mitigation).",
+    "Add append-only, access-controlled audit logging across prompts, completions, retrieved context, and tool calls (mitigates R-1, supports AC-1 detection).",
+    "Enforce hard tenant-scoped filtering at the RAG retrieval layer, not just a namespace convention (mitigates I-2).",
+    "Require signed model artifacts and version-tagged inference responses before any model reaches production (mitigates T-4, R-2, supports AC-2 detection).",
+    "Add training-data validation and provenance tracking to the fine-tuning pipeline (mitigates T-3, supports AC-2 mitigation)."
+  ],
+  "references": [
+    "OWASP Top 10 for LLM Applications (2025) -- genai.owasp.org",
+    "OWASP API Security Top 10 (2023) -- owasp.org",
+    "MITRE ATLAS -- atlas.mitre.org",
+    "MITRE ATT&CK Enterprise -- attack.mitre.org"
+  ],
+  "framework_coverage": {
+    "stride": true,
+    "pasta_full": false,
+    "owasp_top10": true,
+    "owasp_api_top10": true,
+    "owasp_llm_top10": true,
+    "mitre_attack": true,
+    "mitre_atlas": true
+  },
+  "diagrams": {
+    "dfd_drawio_filename": "AI_Support_Agent_DFD.drawio",
+    "threat_model_drawio_filename": "AI_Support_Agent_Threat_Model.drawio"
+  }
+}

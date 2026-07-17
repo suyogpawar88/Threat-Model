@@ -3,11 +3,11 @@
   "owner": {
     "name": "Suyog Pawar"
   },
-  "description": "A collection of threat modeling plugins",
+  "description": "A collection of threat modeling plugins, covering conventional application/API systems and AI/ML/LLM infrastructure",
   "plugins": [
     {
       "name": "threat-model",
-      "description": "Pulls context from Jira, Jenkins, ServiceNow, and a code repository, then runs an end-to-end security threat model: DFD, STRIDE register, attack-chain mapping, compensating-controls assessment, and gap-based recommendations.",
+      "description": "Pulls context from Jira, Jenkins, ServiceNow, and a code repository, then runs an end-to-end security threat model: DFD, STRIDE/PASTA register, AI/ML-specific threats, attack-chain mapping (MITRE ATT&CK/ATLAS-tagged), compensating-controls assessment, gap-based recommendations, and OWASP Top 10/API/LLM mapping.",
       "source": "."
     }
   ]

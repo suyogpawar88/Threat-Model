@@ -1,0 +1,32 @@
+# Example MCP server registration for OpenAI Codex CLI.
+#
+# Codex stores MCP server config in config.toml -- by default ~/.codex/config.toml (global), or a
+# project-scoped .codex/config.toml for trusted projects. Append the [mcp_servers.*] blocks below
+# (or add them one at a time with `codex mcp add`), then fill in each connector's env vars. None of
+# the four connectors are mandatory -- omit any block for a tool you don't use.
+#
+# Paths below assume Codex is launched with this repo as the working directory. Use an absolute
+# path to scripts/connectors/*.py if you register these globally instead of per-project.
+#
+# See `codex mcp --help` and the Codex CLI docs (developers.openai.com/codex) for the current CLI
+# syntax -- MCP configuration in Codex has changed before and may change again.
+
+[mcp_servers.jira]
+command = "python3"
+args = ["scripts/connectors/jira_connector.py"]
+env = { JIRA_BASE_URL = "https://your-org.atlassian.net", JIRA_EMAIL = "you@your-org.com", JIRA_API_TOKEN = "" }
+
+[mcp_servers.jenkins]
+command = "python3"
+args = ["scripts/connectors/jenkins_connector.py"]
+env = { JENKINS_BASE_URL = "https://jenkins.your-org.com", JENKINS_USER = "", JENKINS_API_TOKEN = "" }
+
+[mcp_servers.servicenow]
+command = "python3"
+args = ["scripts/connectors/servicenow_connector.py"]
+env = { SERVICENOW_INSTANCE_URL = "https://your-instance.service-now.com", SERVICENOW_USER = "", SERVICENOW_PASSWORD = "" }
+
+[mcp_servers.repo]
+command = "python3"
+args = ["scripts/connectors/repo_connector.py"]
+env = { REPO_PROVIDER = "github", REPO_TOKEN = "", REPO_OWNER = "", REPO_NAME = "" }

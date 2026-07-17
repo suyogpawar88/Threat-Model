@@ -209,17 +209,6 @@ GitLab and Bitbucket's REST APIs — to add one, implement the equivalent reques
 change. To track new AI/ML frameworks as they emerge, add markers to `AI_STACK_MARKERS` in the same
 file.
 
-## Publishing the docs site
-
-This repo's `docs/` folder is a self-contained static site (no build step) intended for GitHub
-Pages:
-
-1. Push this repo to GitHub.
-2. Go to **Settings → Pages**.
-3. Under **Build and deployment**, set **Source** to "Deploy from a branch," branch `main`, folder
-   `/docs`.
-4. Save — GitHub publishes the page at `https://<your-username>.github.io/Threat-Model/`
-   within a few minutes.
 
 ## Security notes
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AppSec Threat Modeler — Claude Plugin</title>
+<title>AppSec Threat Modeler — AI &amp; AppSec Threat Modeling for Claude, Cursor &amp; Codex</title>
 <style>
   :root {
     --ink: #1b2430;
@@ -125,23 +125,28 @@
 
 <header class="hero">
   <div class="wrap">
-    <div class="kicker">Claude Plugin · AppSec / DevSecOps</div>
-    <h1>Threat modeling that reads your Jira, Jenkins, ServiceNow, and repo — not just a text box.</h1>
+    <div class="kicker">AppSec + AI/ML Security · Claude · Cursor · OpenAI Codex CLI</div>
+    <h1>Threat modeling that reads your Jira, Jenkins, ServiceNow, and repo — now covering AI/ML infrastructure too.</h1>
     <p class="lede">
-      A Claude plugin that connects to your existing tools via API keys, builds a data flow diagram
-      and threat-model diagram in draw.io format, scores every STRIDE threat for business impact,
-      maps attack chains, checks compensating controls, and flags partial-compliance gaps with
-      concrete additional controls — delivered as Word and Excel.
+      Connects to your existing tools via API keys, builds a data flow diagram and threat-model
+      diagram in draw.io format, scores every STRIDE threat for business impact, maps attack chains,
+      checks compensating controls, and flags partial-compliance gaps with concrete additional
+      controls — delivered as Word and Excel. Now also threat-models AI/ML pipelines (prompt
+      injection, RAG/training data poisoning, model extraction, excessive agency), maps every threat
+      to OWASP and MITRE ATT&amp;CK/ATLAS, and runs under Claude Code/Cowork, Cursor, and OpenAI Codex CLI.
     </p>
     <div class="btn-row">
       <a class="btn btn-primary" href="#setup">Get set up</a>
       <a class="btn btn-ghost" href="https://github.com/suyogpawar88/Threat-Model">View on GitHub</a>
     </div>
     <div class="badge-row">
-      <span class="badge">STRIDE + business-impact scoring</span>
+      <span class="badge">STRIDE + PASTA</span>
+      <span class="badge">AI/ML + LLM threats</span>
+      <span class="badge">OWASP Top 10 / API / LLM</span>
+      <span class="badge">MITRE ATT&amp;CK + ATLAS</span>
       <span class="badge">draw.io compatible</span>
       <span class="badge">Word + Excel output</span>
-      <span class="badge">Model-configurable</span>
+      <span class="badge">Claude · Cursor · Codex CLI</span>
     </div>
   </div>
 </header>
@@ -190,6 +195,26 @@
         <span class="icon">⚙️</span>
         <h3>Model-configurable</h3>
         <p>Defaults to Claude Sonnet to keep large connector payloads cheap to summarize. Point it at Opus, Haiku, or another model per your cost/fidelity tradeoff.</p>
+      </div>
+      <div class="card">
+        <span class="icon">🤖</span>
+        <h3>AI/ML infrastructure threats</h3>
+        <p>Prompt injection (direct + indirect), training/RAG data poisoning, model extraction, excessive agency, insecure output handling, and unbounded consumption — layered onto STRIDE.</p>
+      </div>
+      <div class="card">
+        <span class="icon">🧭</span>
+        <h3>OWASP mapping</h3>
+        <p>Every threat tagged against OWASP Top 10, OWASP API Security Top 10, and OWASP Top 10 for LLM Applications — whichever lists apply to the component in scope.</p>
+      </div>
+      <div class="card">
+        <span class="icon">🧬</span>
+        <h3>MITRE ATT&amp;CK + ATLAS</h3>
+        <p>Attack-chain steps tagged with MITRE ATT&amp;CK technique IDs for conventional infrastructure and MITRE ATLAS technique IDs for AI/ML-targeting tradecraft.</p>
+      </div>
+      <div class="card">
+        <span class="icon">🧩</span>
+        <h3>Full PASTA option</h3>
+        <p>Lightweight business-impact scoring by default; switch to the complete 7-stage PASTA process for compliance audits, pre-launch gates, or board-facing reports.</p>
       </div>
     </div>
   </div>
@@ -268,18 +293,97 @@
 
 <section>
   <div class="wrap">
+    <h2 class="section-title">AI/ML infrastructure, threat-modeled end to end</h2>
+    <p class="section-sub">If a repo has an LLM, a RAG pipeline, a vector store, or an agent/tool layer, the plugin knows — and switches on the AI-specific analysis.</p>
+    <div class="grid cols-3">
+      <div class="card">
+        <span class="icon">🕵️</span>
+        <h3>Auto-detection</h3>
+        <p><code class="inline">detect_ai_stack</code> scans the connected repo for LangChain, LlamaIndex, OpenAI/Anthropic/Bedrock SDKs, transformers/torch/vLLM, Pinecone/Weaviate/Chroma, MLflow/Kubeflow/SageMaker, and AutoGen/CrewAI/LangGraph markers.</p>
+      </div>
+      <div class="card">
+        <span class="icon">💉</span>
+        <h3>Prompt injection &amp; RAG poisoning</h3>
+        <p>Direct injection, indirect injection via ingested documents, and vector-store poisoning — each mapped to OWASP LLM01/LLM08 and MITRE ATLAS technique <code class="inline">AML.T0051</code>.</p>
+      </div>
+      <div class="card">
+        <span class="icon">🧪</span>
+        <h3>Training &amp; model supply chain</h3>
+        <p>Fine-tuning data poisoning and unsigned model-registry deploys, mapped to OWASP LLM03/LLM04 and MITRE ATLAS <code class="inline">AML.T0020</code> / <code class="inline">AML.T0018</code>.</p>
+      </div>
+      <div class="card">
+        <span class="icon">🕹️</span>
+        <h3>Excessive agency &amp; insecure output handling</h3>
+        <p>Agents given more tool authority than their task needs, and model output trusted downstream without validation — OWASP LLM06/LLM05, MITRE ATLAS <code class="inline">AML.T0053</code>.</p>
+      </div>
+      <div class="card">
+        <span class="icon">💸</span>
+        <h3>Unbounded consumption</h3>
+        <p>Missing token/turn/iteration limits that enable cost exhaustion or "denial of wallet" attacks against a metered inference endpoint — OWASP LLM10.</p>
+      </div>
+      <div class="card">
+        <span class="icon">🗺️</span>
+        <h3>AI-aware diagrams</h3>
+        <p>New draw.io node types — training pipeline, model registry, vector store, inference endpoint, agent/tool layer — so RAG and agentic systems render correctly in the DFD.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="wrap">
+    <h2 class="section-title">Every threat, mapped to a real framework</h2>
+    <p class="section-sub">Not just a STRIDE label — every threat and attack-chain step carries an ID from an industry-standard list.</p>
+    <table class="setup">
+      <tr><th>Framework</th><th>Applies to</th><th>Example ID</th></tr>
+      <tr><td>OWASP Top 10 (2021)</td><td>Conventional web/application components</td><td><code>A01:2021</code> Broken Access Control</td></tr>
+      <tr><td>OWASP API Security Top 10 (2023)</td><td>REST/GraphQL/RPC APIs, including ML inference endpoints</td><td><code>API4:2023</code> Unrestricted Resource Consumption</td></tr>
+      <tr><td>OWASP Top 10 for LLM Applications (2025)</td><td>LLM apps, RAG pipelines, agents</td><td><code>LLM01:2025</code> Prompt Injection</td></tr>
+      <tr><td>MITRE ATT&amp;CK (Enterprise)</td><td>Conventional infrastructure tradecraft in attack chains</td><td><code>T1078</code> Valid Accounts</td></tr>
+      <tr><td>MITRE ATLAS</td><td>AI/ML-specific tradecraft in attack chains</td><td><code>AML.T0051</code> LLM Prompt Injection</td></tr>
+    </table>
+    <p class="section-sub" style="margin-top:18px;">Both report builders render these as a dedicated column in the threat register and a standalone Framework Coverage Mapping section/sheet.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2 class="section-title">Runs wherever you build</h2>
+    <p class="section-sub">Same skill, same reference docs, same scripts — three entry points depending on your agent of choice.</p>
+    <div class="grid cols-3">
+      <div class="card">
+        <span class="icon">🟣</span>
+        <h3>Claude Code / Cowork</h3>
+        <p>Native plugin — <code class="inline">.claude-plugin/plugin.json</code> and <code class="inline">.mcp.json</code>. Install directly or from this repo.</p>
+      </div>
+      <div class="card">
+        <span class="icon">▶️</span>
+        <h3>Cursor</h3>
+        <p><code class="inline">.cursor/rules/threat-modeling.mdc</code> project rule plus <code class="inline">.cursor/mcp.json</code> for the four connectors.</p>
+      </div>
+      <div class="card">
+        <span class="icon">🖥️</span>
+        <h3>OpenAI Codex CLI</h3>
+        <p>Root <code class="inline">AGENTS.md</code>, read automatically, plus <code class="inline">config/codex-config.example.toml</code> for MCP server registration.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
     <h2 class="section-title">What the outputs look like</h2>
     <p class="section-sub">Illustrative preview — actual reports are generated from your live data, with as many rows as the assessment produces.</p>
     <div class="grid cols-2">
       <div class="mock">
         <div class="mock-head">Threat Register (excerpt) — Word &amp; Excel</div>
         <table>
-          <tr><th>ID</th><th>Threat</th><th>L×I</th><th>Risk</th></tr>
-          <tr><td>S-1</td><td>Session token replay</td><td>4×5</td><td><span class="risk-pill risk-high">High</span></td></tr>
-          <tr><td>E-1</td><td>Parameter tampering on status</td><td>3×5</td><td><span class="risk-pill risk-high">High</span></td></tr>
-          <tr><td>I-2</td><td>Excess PII sent to vendor</td><td>3×4</td><td><span class="risk-pill risk-med">Medium</span></td></tr>
-          <tr><td>T-1</td><td>Unsigned internal gRPC payload</td><td>2×4</td><td><span class="risk-pill risk-med">Medium</span></td></tr>
-          <tr><td>D-1</td><td>No per-account rate limit</td><td>2×2</td><td><span class="risk-pill risk-low">Low</span></td></tr>
+          <tr><th>ID</th><th>Threat</th><th>L×I</th><th>Risk</th><th>OWASP</th></tr>
+          <tr><td>S-1</td><td>Session token replay</td><td>4×5</td><td><span class="risk-pill risk-high">High</span></td><td>A07:2021</td></tr>
+          <tr><td>E-1</td><td>Parameter tampering on status</td><td>3×5</td><td><span class="risk-pill risk-high">High</span></td><td>API5:2023</td></tr>
+          <tr><td>I-2</td><td>Excess PII sent to vendor</td><td>3×4</td><td><span class="risk-pill risk-med">Medium</span></td><td>API6:2023</td></tr>
+          <tr><td>T-1</td><td>Unsigned internal gRPC payload</td><td>2×4</td><td><span class="risk-pill risk-med">Medium</span></td><td>A08:2021</td></tr>
+          <tr><td>D-1</td><td>No per-account rate limit</td><td>2×2</td><td><span class="risk-pill risk-low">Low</span></td><td>API4:2023</td></tr>
         </table>
       </div>
       <div class="mock">
@@ -292,6 +396,26 @@
         </table>
         <div style="padding:10px 14px;font-size:12px;color:#4b5563;">Overall: <span class="risk-pill risk-high">High</span> — sanctioned-applicant approval, regulatory exposure</div>
       </div>
+      <div class="mock">
+        <div class="mock-head">AI Threat Register (excerpt) — AI Support Agent example</div>
+        <table>
+          <tr><th>ID</th><th>Threat</th><th>L×I</th><th>Risk</th><th>OWASP LLM</th></tr>
+          <tr><td>T-1</td><td>Direct prompt injection overrides system instructions</td><td>5×5</td><td><span class="risk-pill risk-high">High</span></td><td>LLM01:2025</td></tr>
+          <tr><td>E-1</td><td>Excessive agency — refund tool with no approval gate</td><td>4×5</td><td><span class="risk-pill risk-high">High</span></td><td>LLM06:2025</td></tr>
+          <tr><td>I-2</td><td>Cross-tenant PII bleed via RAG context</td><td>3×5</td><td><span class="risk-pill risk-high">High</span></td><td>LLM02/LLM08:2025</td></tr>
+          <tr><td>D-1</td><td>Unbounded consumption — no token/turn limits</td><td>4×3</td><td><span class="risk-pill risk-med">Medium</span></td><td>LLM10:2025</td></tr>
+        </table>
+      </div>
+      <div class="mock">
+        <div class="mock-head">Attack Chain AC-1 — Indirect injection → fraudulent refund</div>
+        <table>
+          <tr><th>Step</th><th>Threat</th><th>MITRE ATLAS</th></tr>
+          <tr><td>1</td><td>T-2 Poisoned KB doc retrieved as RAG context</td><td>AML.T0051</td></tr>
+          <tr><td>2</td><td>E-1 Agent calls refund tool with no approval</td><td>AML.T0053</td></tr>
+          <tr><td>3</td><td>R-1 Mutable logs delay detection</td><td>—</td></tr>
+        </table>
+        <div style="padding:10px 14px;font-size:12px;color:#4b5563;">Overall: <span class="risk-pill risk-high">High</span> — direct financial fraud via autonomous tool execution</div>
+      </div>
     </div>
   </div>
 </section>
@@ -301,10 +425,10 @@
     <h2 class="section-title">Set up</h2>
     <p class="section-sub">Install the plugin, then configure only the connectors you actually plan to use — none are mandatory.</p>
     <ol class="steps">
-      <li>Download the <code class="inline">.plugin</code> file from the repo's <a href="https://github.com/suyogpawar88/Threat-Model/releases">releases</a> and install it in Claude Code or Cowork.</li>
+      <li>Download the <code class="inline">.plugin</code> file from the repo's <a href="https://github.com/suyogpawar88/Threat-Model/releases">releases</a> and install it in Claude Code or Cowork — or, for Cursor, enable <code class="inline">.cursor/rules/threat-modeling.mdc</code> + <code class="inline">.cursor/mcp.json</code>; for OpenAI Codex CLI, it reads <code class="inline">AGENTS.md</code> automatically (see <code class="inline">config/codex-config.example.toml</code> for MCP setup).</li>
       <li>Copy <code class="inline">.env.example</code> to <code class="inline">.env</code> and fill in API keys for the tools you use (table below).</li>
       <li>Set <code class="inline">ANTHROPIC_API_KEY</code> if you want the token-minimizing summarizer (<code class="inline">scripts/summarize.py</code>) to run automatically on large payloads.</li>
-      <li>In your Claude session: <em>"Threat model the Payment Onboarding epic PROJ-4210, pull the repo org/onboarding-service, and give me both Word and Excel."</em></li>
+      <li>In your session: <em>"Threat model the Payment Onboarding epic PROJ-4210, pull the repo org/onboarding-service, and give me both Word and Excel."</em> Or, for an AI system: <em>"Threat model our LangChain support agent repo and map every threat to the OWASP LLM Top 10 and MITRE ATLAS."</em></li>
     </ol>
     <br>
     <table class="setup">
@@ -322,16 +446,21 @@
   <div class="wrap">
     <h2 class="section-title">Try it without any connectors</h2>
     <p class="section-sub">The report and diagram generators run standalone against a JSON spec — useful for previewing the output format before wiring up live tools.</p>
-    <pre class="code-block">python3 scripts/generate_drawio.py skills/threat-modeling/references/examples/sample_threat_model_spec.json MyService_Threat_Model.drawio threat_model
-
+    <pre class="code-block"># Conventional application example
+python3 scripts/generate_drawio.py skills/threat-modeling/references/examples/sample_threat_model_spec.json MyService_Threat_Model.drawio threat_model
 python3 scripts/build_docx_report.py skills/threat-modeling/references/examples/sample_report_data.json MyService_Report.docx
-python3 scripts/build_xlsx_report.py skills/threat-modeling/references/examples/sample_report_data.json MyService_Register.xlsx</pre>
+python3 scripts/build_xlsx_report.py skills/threat-modeling/references/examples/sample_report_data.json MyService_Register.xlsx
+
+# AI / RAG / agentic system example
+python3 scripts/generate_drawio.py skills/threat-modeling/references/examples/sample_ai_threat_model_spec.json AI_Agent_Threat_Model.drawio threat_model
+python3 scripts/build_docx_report.py skills/threat-modeling/references/examples/sample_ai_report_data.json AI_Agent_Report.docx
+python3 scripts/build_xlsx_report.py skills/threat-modeling/references/examples/sample_ai_report_data.json AI_Agent_Register.xlsx</pre>
   </div>
 </section>
 
 <footer>
   <div class="wrap">
-    Threat Model Plugin · MIT License · Built for the Claude plugin ecosystem ·
+    Threat Model Plugin · MIT License · AppSec + AI/ML Security, STRIDE/PASTA, OWASP + MITRE ATT&amp;CK/ATLAS mapped · Runs on Claude Code/Cowork, Cursor, and OpenAI Codex CLI ·
     <a href="https://github.com/suyogpawar88/Threat-Model">Source on GitHub</a>
   </div>
 </footer>
